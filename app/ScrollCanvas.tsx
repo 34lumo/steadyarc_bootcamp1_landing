@@ -12,43 +12,49 @@ const sections = [
     startFrame: 0,
     endFrame: 45,
     title: "SteadyArc",
-    sub: "Clinical insight for every day of recovery — not just appointment days."
+    sub: "Sequential functional telemonitoring of stroke recovery.",
+    sub2: "From a game to the clinical decision that matters.",
   },
   {
     startFrame: 45,
     endFrame: 130,
-    title: "Recovery happens every day.",
-    sub: "But clinical insight usually doesn't. We started with a smart glove. Then we found a simpler answer."
+    title: "Recovery happens every day. So does deterioration.",
+    sub: "Decisions based on visits too far apart.",
   },
   {
     startFrame: 130,
     endFrame: 300,
-    title: "The core problem is scale.",
-    sub: "Far more patients than clinicians. Care is built around occasional check-ins, but recovery doesn't wait."
+    title: "The monitoring gap is structural.",
+    sub: "673 post-stroke patients per clinician. Spaced visits.",
+    sub2: "Every missed week matters.",
   },
   {
     startFrame: 300,
     endFrame: 405,
     title: "We simplified the glove into pure software.",
-    sub: "No wearables. No complex setup. The same clinical insight — from any device with a camera."
+    sub: "A device with a camera. No wearables. No setup.",
+    sub2: "A SaaS platform — objective functional data after each session.",
   },
   {
     startFrame: 405,
     endFrame: 565,
-    title: "Early signs of recovery exist — but they go untracked.",
-    sub: "SteadyArc captures these signals through simple digital tasks. Patients play. Clinicians see the data."
+    title: "Early deterioration produces measurable signals.",
+    title2: "They just aren't being captured.",
+    sub: "SteadyArc captures signals from sequential visits.",
+    sub2: "Turns them into actionable information — proactively.",
   },
   {
     startFrame: 565,
     endFrame: 720,
-    title: "For patients, a game. For clinicians, a dashboard.",
-    sub: "Works on any device — phone or computer. No downloads, no hardware. Act earlier when something is wrong."
+    title: "For patients, a game. For clinicians, objective data over time.",
+    sub: "It's not one session that matters — it's the sequence.",
+    sub2: "Act earlier. Allocate specialist resources where and when needed.",
   },
   {
     startFrame: 720,
     endFrame: 764,
     title: "SaaS. Starting with stroke. Built to scale.",
-    sub: "Per clinician or per patient. Expanding to Parkinson's. Backed by RCC Harvard, AWS, and Saturno Labs."
+    sub: "Per clinician or per patient. Expanding to Parkinson's. Backed by RCC Harvard, AWS, and Saturno Labs.",
   },
 ];
 
@@ -487,6 +493,11 @@ export default function ScrollCanvas() {
               <h2 className="font-extrabold tracking-tighter text-5xl md:text-6xl text-transparent bg-clip-text bg-gradient-to-b from-white to-white/70 drop-shadow-[0_0_20px_rgba(0,212,255,0.3)] leading-tight m-0">
                 {section.title}
               </h2>
+              {"title2" in section && section.title2 && (
+                <h2 className="font-extrabold tracking-tighter text-5xl md:text-6xl text-transparent bg-clip-text bg-gradient-to-b from-cyan-200 to-cyan-400/70 drop-shadow-[0_0_20px_rgba(0,212,255,0.3)] leading-tight m-0 mt-2">
+                  {section.title2}
+                </h2>
+              )}
 
               {section.sub && (
                 <>
@@ -494,6 +505,11 @@ export default function ScrollCanvas() {
                   <p className="font-medium tracking-wide text-xl md:text-2xl text-cyan-50/80 leading-relaxed m-0">
                     {section.sub}
                   </p>
+                  {"sub2" in section && section.sub2 && (
+                    <p className="font-medium tracking-wide text-lg md:text-xl text-cyan-200/60 leading-relaxed m-0 mt-3">
+                      {section.sub2}
+                    </p>
+                  )}
                 </>
               )}
             </div>
@@ -838,7 +854,7 @@ export default function ScrollCanvas() {
                   Starting with Post-<span className="text-cyan-300">Stroke</span> Rehabilitation.
                 </h2>
                 <p className="text-white/70 text-2xl mb-12 leading-relaxed">
-                  A large, urgent, and underserved need.
+                  A large, urgent, and structurally underserved need.
                 </p>
 
                 <div className="flex items-center gap-12 justify-center">
@@ -887,11 +903,17 @@ export default function ScrollCanvas() {
                     <h2 className="text-5xl md:text-6xl font-extrabold tracking-tighter text-white mb-6">
                       B2B SaaS Model
                     </h2>
+                    <p className="text-white/80 text-xl leading-relaxed mb-4">
+                      Clinics subscribe. Better outcomes and smarter use of resources.
+                    </p>
                     <p className="text-white/80 text-xl leading-relaxed mb-8">
-                      We don't just improve outcomes—we help providers manage <span className="text-cyan-300 font-bold text-3xl counter-animate">3x</span> more patients with the same resources.
+                      <span className="text-cyan-300 font-bold text-3xl counter-animate">3x</span> more patients managed.
                     </p>
                     <p className="text-cyan-400/70 text-sm italic">
-                      We are a telemonitoring platform, not a diagnostic tool.
+                      Sequential functional telemonitoring — not diagnosis.
+                    </p>
+                    <p className="text-cyan-400/50 text-xs italic mt-1">
+                      Decision support, not replacement.
                     </p>
                   </div>
 
@@ -1220,9 +1242,15 @@ export default function ScrollCanvas() {
           <p className="text-cyan-400 font-bold tracking-[0.2em] uppercase text-sm mb-6">
             THE SOLUTION IN ACTION
           </p>
-          <h2 className="text-white text-5xl md:text-7xl font-extrabold tracking-tighter mb-12">
-            Experience SteadyArc.
+          <h2 className="text-white text-4xl md:text-6xl font-extrabold tracking-tighter mb-4">
+            Stroke recovery, home-monitoring.
           </h2>
+          <p className="text-cyan-50/70 text-xl md:text-2xl leading-relaxed mb-3">
+            A game for patients. Earlier decisions for clinicians.
+          </p>
+          <p className="text-cyan-400/60 text-base mb-12">
+            Not diagnosis. No wearables.
+          </p>
           <a
             href="#"
             className="inline-block bg-white text-black px-10 py-5 rounded-full font-bold text-lg hover:scale-105 transition-transform duration-300 shadow-[0_0_40px_rgba(255,255,255,0.15)]"
