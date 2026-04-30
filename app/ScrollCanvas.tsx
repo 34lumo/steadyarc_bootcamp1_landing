@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import ClinicalDashboard from "./ClinicalDashboard";
 
 const TOTAL_FRAMES = 1164;
 const BATCH_SIZE = 20;
@@ -694,36 +695,33 @@ export default function ScrollCanvas() {
             zIndex: 20,
           }}
         >
-          <div className="absolute top-[18%] left-12 flex flex-col gap-4">
-            {/* Mobile Badge */}
-            <div className="flex items-center gap-4 backdrop-blur-md bg-white/[0.05] border border-cyan-400/30 rounded-2xl px-6 py-4 shadow-[0_0_20px_rgba(0,212,255,0.15)]">
-              <svg className="w-8 h-8 text-cyan-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <div className="absolute top-[5%] left-1/2 -translate-x-1/2 flex items-center gap-5">
+            <div className="flex items-center gap-3 backdrop-blur-md bg-white/[0.05] border border-cyan-400/30 rounded-2xl px-5 py-3 shadow-[0_0_20px_rgba(0,212,255,0.15)]">
+              <svg className="w-7 h-7 text-cyan-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <rect x="5" y="2" width="14" height="20" rx="2" />
                 <line x1="12" y1="18" x2="12" y2="18" strokeLinecap="round" strokeWidth="2" />
               </svg>
               <div>
-                <p className="text-white text-lg font-bold tracking-tight">Mobile</p>
-                <p className="text-cyan-400/70 text-xs tracking-wide">Patient gamified app</p>
+                <p className="text-white text-base font-bold tracking-tight">Mobile</p>
+                <p className="text-cyan-400/70 text-[10px] tracking-wide">Patient gamified app</p>
               </div>
             </div>
 
-            {/* Desktop Badge */}
-            <div className="flex items-center gap-4 backdrop-blur-md bg-white/[0.05] border border-cyan-400/30 rounded-2xl px-6 py-4 shadow-[0_0_20px_rgba(0,212,255,0.15)]">
-              <svg className="w-8 h-8 text-cyan-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <div className="flex items-center gap-3 backdrop-blur-md bg-white/[0.05] border border-cyan-400/30 rounded-2xl px-5 py-3 shadow-[0_0_20px_rgba(0,212,255,0.15)]">
+              <svg className="w-7 h-7 text-cyan-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <rect x="2" y="3" width="20" height="14" rx="2" />
                 <line x1="8" y1="21" x2="16" y2="21" />
                 <line x1="12" y1="17" x2="12" y2="21" />
               </svg>
               <div>
-                <p className="text-white text-lg font-bold tracking-tight">Computer</p>
-                <p className="text-cyan-400/70 text-xs tracking-wide">Clinician dashboard</p>
+                <p className="text-white text-base font-bold tracking-tight">Computer</p>
+                <p className="text-cyan-400/70 text-[10px] tracking-wide">Clinician dashboard</p>
               </div>
             </div>
 
-            {/* No Hardware Tag */}
-            <div className="flex items-center gap-3 px-5 py-3 border border-cyan-400/20 rounded-full mt-1">
+            <div className="flex items-center gap-2 px-4 py-3 border border-cyan-400/20 rounded-full">
               <div className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]"></div>
-              <p className="text-cyan-300/90 text-sm font-semibold tracking-wide">No wearables needed</p>
+              <p className="text-cyan-300/90 text-xs font-semibold tracking-wide">No wearables needed</p>
             </div>
           </div>
         </div>
@@ -867,44 +865,8 @@ export default function ScrollCanvas() {
                     </p>
                   </div>
 
-                  {/* Diegetic Clinician Dashboard Wireframe */}
                   <div className="relative">
-                    <div className="backdrop-blur-sm bg-white/[0.02] border border-cyan-400/20 rounded-2xl p-6 shadow-[0_0_30px_rgba(0,212,255,0.15)]">
-                      <p className="text-cyan-400 text-xs tracking-[0.2em] uppercase font-bold mb-4">CLINICIAN DASHBOARD</p>
-
-                      {/* Mock Patient List */}
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-3 p-3 bg-white/[0.02] border border-cyan-400/10 rounded-lg">
-                          <div className="w-2 h-2 rounded-full bg-green-400"></div>
-                          <div className="flex-1">
-                            <p className="text-white/80 text-sm">Patient A</p>
-                            <p className="text-white/40 text-xs">SRT: 128ms ↑ 12%</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3 p-3 bg-white/[0.02] border border-cyan-400/10 rounded-lg">
-                          <div className="w-2 h-2 rounded-full bg-amber-400"></div>
-                          <div className="flex-1">
-                            <p className="text-white/80 text-sm">Patient B</p>
-                            <p className="text-white/40 text-xs">Flexion: 85° ↓ 3%</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3 p-3 bg-white/[0.02] border border-cyan-400/10 rounded-lg">
-                          <div className="w-2 h-2 rounded-full bg-green-400"></div>
-                          <div className="flex-1">
-                            <p className="text-white/80 text-sm">Patient C</p>
-                            <p className="text-white/40 text-xs">Smoothness: 91.2 ↑ 5%</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Mock Graph */}
-                      <div className="mt-4 h-24 bg-black/20 border border-cyan-400/10 rounded-lg relative overflow-hidden">
-                        <svg className="absolute inset-0 w-full h-full">
-                          <polyline points="10,80 30,70 50,50 70,45 90,40" fill="none" stroke="rgba(34,211,238,0.6)" strokeWidth="2" />
-                          <polyline points="10,85 30,80 50,75 70,70 90,68" fill="none" stroke="rgba(34,211,238,0.3)" strokeWidth="1" strokeDasharray="3,3" />
-                        </svg>
-                      </div>
-                    </div>
+                    <ClinicalDashboard />
                   </div>
                 </div>
               </div>
