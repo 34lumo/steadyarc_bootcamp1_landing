@@ -40,7 +40,7 @@ const sections = [
     startFrame: 565,
     endFrame: 720,
     title: "For patients, a game. For clinicians, a dashboard.",
-    sub: "Act earlier when something is wrong. Focus time where it matters most."
+    sub: "Works on any device — phone or computer. No downloads, no hardware. Act earlier when something is wrong."
   },
   {
     startFrame: 720,
@@ -100,6 +100,7 @@ export default function ScrollCanvas() {
   const patientCounterRef = useRef<HTMLDivElement | null>(null);
   const systemCapacityRef = useRef<HTMLDivElement | null>(null);
   const cvMetricsHudRef = useRef<HTMLDivElement | null>(null);
+  const deviceBadgeRef = useRef<HTMLDivElement | null>(null);
   const counterStartTimeRef = useRef<number | null>(null);
   const lastHUDUpdateRef = useRef<number>(0);
   const srtRef = useRef<HTMLSpanElement>(null);
@@ -326,6 +327,16 @@ export default function ScrollCanvas() {
       if (cvMetricsHud) {
         cvMetricsHud.style.opacity = String(hudOpacity);
         cvMetricsHud.style.transform = `translateY(${hudTransformY}px)`;
+      }
+
+      // Device Badge: frames 565-720 (game section - computer visible)
+      const deviceSection = { startFrame: 565, endFrame: 720 };
+      const deviceOpacity = getSectionOpacity(progress, deviceSection);
+      const deviceTransformY = getSectionTransform(progress, deviceSection);
+      const deviceBadge = deviceBadgeRef.current;
+      if (deviceBadge) {
+        deviceBadge.style.opacity = String(deviceOpacity);
+        deviceBadge.style.transform = `translateY(${deviceTransformY}px)`;
       }
 
       // Direct DOM update for HUD numbers (100ms throttle)
@@ -574,36 +585,33 @@ export default function ScrollCanvas() {
           {/* Capacity Data Stack - Right Side (NO BOX) */}
           <div className="absolute top-1/2 right-12 -translate-y-1/2 text-right">
             {/* Top Label */}
-            <p className="text-cyan-400 text-sm tracking-[0.2em] uppercase font-bold mb-4 opacity-80 drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]">
+            <p className="text-cyan-400 text-sm tracking-[0.2em] uppercase font-bold mb-6 opacity-80 drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]">
               U.S. NEUROLOGY CAPACITY
             </p>
 
-            {/* Data Point 1: Living Survivors */}
-            <p className="text-white text-3xl font-bold tracking-tight drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
-              9,000,000
+            {/* The Ratio - HERO ELEMENT */}
+            <p className="text-cyan-300 text-8xl md:text-9xl font-extrabold tracking-tighter drop-shadow-[0_0_40px_rgba(0,212,255,0.7)] mb-1 counter-animate leading-none">
+              673 : 1
             </p>
-            <p className="text-white/60 text-xs tracking-widest uppercase mb-6">
-              LIVING SURVIVORS
-            </p>
-
-            {/* Data Point 2: Active Neurologists */}
-            <p className="text-white text-3xl font-bold tracking-tight drop-shadow-[0_0_15px_rgba(0,212,255,0.4)]">
-              13,350
-            </p>
-            <p className="text-white/60 text-xs tracking-widest uppercase mb-6">
-              ACTIVE NEUROLOGISTS
+            <p className="text-cyan-400 text-base md:text-lg tracking-[0.15em] uppercase font-bold drop-shadow-[0_0_12px_rgba(34,211,238,0.6)] mb-8">
+              PATIENTS PER CLINICIAN
             </p>
 
             {/* Accent Line */}
-            <div className="w-24 h-0.5 bg-cyan-400 ml-auto mb-4 shadow-[0_0_10px_rgba(34,211,238,0.6)]" />
+            <div className="w-32 h-0.5 bg-cyan-400/60 ml-auto mb-6 shadow-[0_0_10px_rgba(34,211,238,0.6)]" />
 
-            {/* The Ratio (The Kicker) */}
-            <p className="text-cyan-300 text-5xl font-extrabold tracking-tighter drop-shadow-[0_0_25px_rgba(0,212,255,0.5)] mb-2">
-              673 : 1
-            </p>
-            <p className="text-cyan-400/80 text-xs tracking-widest uppercase drop-shadow-[0_0_8px_rgba(34,211,238,0.4)]">
-              PATIENT TO DOCTOR RATIO
-            </p>
+            {/* Supporting Data */}
+            <div className="flex items-center gap-6 justify-end">
+              <div>
+                <p className="text-white/80 text-xl font-bold tracking-tight">9M</p>
+                <p className="text-white/40 text-xs tracking-widest uppercase">SURVIVORS</p>
+              </div>
+              <div className="w-px h-10 bg-cyan-400/30"></div>
+              <div>
+                <p className="text-white/80 text-xl font-bold tracking-tight">13,350</p>
+                <p className="text-white/40 text-xs tracking-widest uppercase">NEUROLOGISTS</p>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -666,6 +674,56 @@ export default function ScrollCanvas() {
               <p className="text-white text-4xl font-bold tracking-tight drop-shadow-[0_0_15px_rgba(255,255,255,0.4)] font-mono">
                 <span ref={tremorRef}>1.5</span> mm
               </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Device Compatibility Badges - Section 6 (Game Section) */}
+      {loaded && (
+        <div
+          ref={deviceBadgeRef}
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            opacity: 0,
+            pointerEvents: "none",
+            zIndex: 20,
+          }}
+        >
+          <div className="absolute top-[18%] left-12 flex flex-col gap-4">
+            {/* Mobile Badge */}
+            <div className="flex items-center gap-4 backdrop-blur-md bg-white/[0.05] border border-cyan-400/30 rounded-2xl px-6 py-4 shadow-[0_0_20px_rgba(0,212,255,0.15)]">
+              <svg className="w-8 h-8 text-cyan-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <rect x="5" y="2" width="14" height="20" rx="2" />
+                <line x1="12" y1="18" x2="12" y2="18" strokeLinecap="round" strokeWidth="2" />
+              </svg>
+              <div>
+                <p className="text-white text-lg font-bold tracking-tight">Mobile</p>
+                <p className="text-cyan-400/70 text-xs tracking-wide">Patient gamified app</p>
+              </div>
+            </div>
+
+            {/* Desktop Badge */}
+            <div className="flex items-center gap-4 backdrop-blur-md bg-white/[0.05] border border-cyan-400/30 rounded-2xl px-6 py-4 shadow-[0_0_20px_rgba(0,212,255,0.15)]">
+              <svg className="w-8 h-8 text-cyan-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <rect x="2" y="3" width="20" height="14" rx="2" />
+                <line x1="8" y1="21" x2="16" y2="21" />
+                <line x1="12" y1="17" x2="12" y2="21" />
+              </svg>
+              <div>
+                <p className="text-white text-lg font-bold tracking-tight">Computer</p>
+                <p className="text-cyan-400/70 text-xs tracking-wide">Clinician dashboard</p>
+              </div>
+            </div>
+
+            {/* No Hardware Tag */}
+            <div className="flex items-center gap-3 px-5 py-3 border border-cyan-400/20 rounded-full mt-1">
+              <div className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]"></div>
+              <p className="text-cyan-300/90 text-sm font-semibold tracking-wide">No wearables needed</p>
             </div>
           </div>
         </div>
@@ -744,12 +802,6 @@ export default function ScrollCanvas() {
               }}
             >
               <div className="backdrop-blur-md bg-white/[0.03] border border-cyan-500/30 rounded-3xl p-16 max-w-4xl w-full shadow-[0_0_50px_rgba(0,212,255,0.2)] relative overflow-hidden">
-                {/* HIPAA Badge */}
-                <div className="absolute top-6 right-6 px-4 py-2 bg-cyan-500/20 border border-cyan-400/40 rounded-full">
-                  <p className="text-cyan-300 text-xs tracking-[0.2em] uppercase font-bold">HIPAA COMPLIANT</p>
-                </div>
-
-                {/* CV Keypoint Decoration */}
                 <div className="absolute top-8 left-8 w-12 h-12 border-2 border-cyan-400/40 rounded-full keypoint-spin"></div>
                 <div className="absolute top-12 left-12 w-4 h-4 bg-cyan-400/30 rounded-full"></div>
 
@@ -770,6 +822,15 @@ export default function ScrollCanvas() {
                   <div>
                     <p className="text-white text-6xl font-extrabold">$1.2B</p>
                     <p className="text-white/60 text-lg mt-2">rehab market</p>
+                  </div>
+                </div>
+
+                <div className="absolute top-6 right-6 w-36 h-36" style={{ transform: 'rotate(-12deg)' }}>
+                  <div className="w-full h-full rounded-full border-[3px] border-cyan-400/80 flex flex-col items-center justify-center relative">
+                    <div className="absolute inset-[4px] rounded-full border border-cyan-400/50"></div>
+                    <p className="text-cyan-400 text-xs tracking-[0.2em] uppercase font-bold">Certified</p>
+                    <p className="text-cyan-300 text-2xl font-extrabold tracking-tight leading-none mt-1">HIPAA</p>
+                    <p className="text-cyan-400 text-xs tracking-[0.2em] uppercase font-bold mt-1">Compliant</p>
                   </div>
                 </div>
 
@@ -799,7 +860,7 @@ export default function ScrollCanvas() {
                       B2B SaaS Model
                     </h2>
                     <p className="text-white/80 text-xl leading-relaxed mb-8">
-                      Clinics subscribe per clinician/patient. We don't just improve outcomes—we help providers manage <span className="text-cyan-300 font-bold text-3xl counter-animate">3x</span> more patients with the same resources.
+                      We don't just improve outcomes—we help providers manage <span className="text-cyan-300 font-bold text-3xl counter-animate">3x</span> more patients with the same resources.
                     </p>
                     <p className="text-cyan-400/70 text-sm italic">
                       We are a telemonitoring platform, not a diagnostic tool.
@@ -914,11 +975,17 @@ export default function ScrollCanvas() {
             {/* Phase 1 */}
             <div className="group relative breathe-slow">
               <div className="backdrop-blur-md bg-white/[0.03] border border-amber-400/20 rounded-3xl p-10 shadow-[0_0_20px_rgba(251,191,36,0.1)] group-hover:border-amber-400/50 group-hover:shadow-[0_0_30px_rgba(251,191,36,0.25)] transition-all duration-700 text-left relative overflow-hidden">
-                {/* CV Keypoint Decoration */}
                 <div className="absolute top-4 right-4 w-10 h-10 border-2 border-amber-400/30 rounded-full keypoint-spin"></div>
                 <div className="absolute top-6 right-6 w-4 h-4 bg-amber-400/20 rounded-full phase-pulse"></div>
 
-                <p className="text-amber-400 text-sm tracking-[0.2em] uppercase font-bold mb-4">PHASE 1</p>
+                <div className="flex items-center gap-3 mb-6">
+                  <svg className="w-10 h-7 rounded-sm overflow-hidden flex-shrink-0 shadow-[0_0_10px_rgba(251,191,36,0.3)]" viewBox="0 0 30 20">
+                    <rect width="30" height="5" y="0" fill="#AA151B" />
+                    <rect width="30" height="10" y="5" fill="#F1BF00" />
+                    <rect width="30" height="5" y="15" fill="#AA151B" />
+                  </svg>
+                  <p className="text-amber-400 text-sm tracking-[0.2em] uppercase font-bold">PHASE 1</p>
+                </div>
                 <h3 className="text-white text-2xl font-bold mb-4">Clinical Testing & Validation</h3>
                 <p className="text-white/80 text-base leading-relaxed">
                   Leading hospitals in <span className="text-amber-300 font-semibold">Madrid, Spain</span>
@@ -926,14 +993,24 @@ export default function ScrollCanvas() {
               </div>
             </div>
 
-            {/* Phase 2 */}
             <div className="group relative drift-subtle">
               <div className="backdrop-blur-md bg-white/[0.03] border border-cyan-400/20 rounded-3xl p-10 shadow-[0_0_20px_rgba(0,212,255,0.1)] group-hover:border-cyan-400/50 group-hover:shadow-[0_0_30px_rgba(0,212,255,0.25)] transition-all duration-700 text-left relative overflow-hidden">
-                {/* Cyan CV Keypoint Decoration */}
                 <div className="absolute top-4 right-4 w-10 h-10 border-2 border-cyan-400/30 rounded-full keypoint-spin" style={{ animationDelay: '7s' }}></div>
                 <div className="absolute top-6 right-6 w-4 h-4 bg-cyan-400/20 rounded-full"></div>
 
-                <p className="text-cyan-400 text-sm tracking-[0.2em] uppercase font-bold mb-4">PHASE 2</p>
+                <div className="flex items-center gap-3 mb-6">
+                  <svg className="w-10 h-7 rounded-sm overflow-hidden flex-shrink-0 shadow-[0_0_10px_rgba(0,212,255,0.3)]" viewBox="0 0 30 20">
+                    <rect width="30" height="20" fill="#B22234" />
+                    <rect width="30" height="1.54" y="1.54" fill="white" />
+                    <rect width="30" height="1.54" y="4.62" fill="white" />
+                    <rect width="30" height="1.54" y="7.69" fill="white" />
+                    <rect width="30" height="1.54" y="10.77" fill="white" />
+                    <rect width="30" height="1.54" y="13.85" fill="white" />
+                    <rect width="30" height="1.54" y="16.92" fill="white" />
+                    <rect width="12" height="10.77" fill="#3C3B6E" />
+                  </svg>
+                  <p className="text-cyan-400 text-sm tracking-[0.2em] uppercase font-bold">PHASE 2</p>
+                </div>
                 <h3 className="text-white text-2xl font-bold mb-4">Scaling & U.S. Market Entry</h3>
                 <p className="text-white/80 text-base leading-relaxed">
                   Bringing the solution to the <span className="text-cyan-300 font-semibold">USA</span>
@@ -1001,156 +1078,150 @@ export default function ScrollCanvas() {
             A multidisciplinary team combining computer science, biomedical engineering, medicine, business, and AI.
           </p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 mt-16 relative z-10">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mt-16 relative z-10">
 
-            {/* Member 1: Mateo */}
-            <div className="group relative">
-              {/* Premium Capsule Container */}
-              <div className="backdrop-blur-md bg-white/[0.03] border-2 border-cyan-500/40 rounded-2xl p-6 shadow-[0_0_20px_rgba(0,212,255,0.15)] group-hover:border-cyan-500/70 group-hover:shadow-[0_0_30px_rgba(0,212,255,0.3)] transition-all duration-500">
+            <div className="flex flex-col bg-white/[0.02] backdrop-blur-sm border border-cyan-500/20 rounded-3xl p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <svg className="w-5 h-5 text-cyan-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" />
+                </svg>
+                <p className="text-cyan-400 text-xs tracking-[0.25em] uppercase font-bold">Engineering & Technology</p>
+              </div>
+              <div className="h-px bg-cyan-400/40 mb-6" />
 
-                {/* Corner Scanner Lines */}
-                <div className="absolute top-3 left-3 w-4 h-4 border-t-2 border-l-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
-                <div className="absolute top-3 right-3 w-4 h-4 border-t-2 border-r-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
-                <div className="absolute bottom-3 left-3 w-4 h-4 border-b-2 border-l-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
-                <div className="absolute bottom-3 right-3 w-4 h-4 border-b-2 border-r-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
-
-                {/* Portrait with CV Frame */}
-                <div className="relative w-32 h-32 mx-auto mb-6">
-                  <div className="absolute inset-0 rounded-full bg-linear-to-b from-cyan-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl"></div>
-                  <div className="relative w-full h-full rounded-full border border-cyan-500/30 bg-black/50 backdrop-blur-md shadow-[0_0_15px_rgba(0,212,255,0.2)] flex items-center justify-center overflow-hidden group-hover:border-cyan-500/60 group-hover:shadow-[0_0_20px_rgba(0,212,255,0.4)] transition-all duration-500">
-                    {/* Scanline Effect */}
-                    <div className="absolute top-[10%] left-0 right-0 h-px bg-cyan-400/30 blur-[0.5px]"></div>
-                    <img src="/mateo.jpeg" alt="Mateo" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+              <div className="flex flex-col gap-6">
+                <div className="group relative">
+                  <div className="backdrop-blur-md bg-white/[0.03] border-2 border-cyan-500/40 rounded-2xl p-6 shadow-[0_0_20px_rgba(0,212,255,0.15)] group-hover:border-cyan-500/70 group-hover:shadow-[0_0_30px_rgba(0,212,255,0.3)] transition-all duration-500">
+                    <div className="absolute top-3 left-3 w-4 h-4 border-t-2 border-l-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
+                    <div className="absolute top-3 right-3 w-4 h-4 border-t-2 border-r-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
+                    <div className="absolute bottom-3 left-3 w-4 h-4 border-b-2 border-l-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
+                    <div className="absolute bottom-3 right-3 w-4 h-4 border-b-2 border-r-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
+                    <div className="relative w-32 h-32 mx-auto mb-6">
+                      <div className="absolute inset-0 rounded-full bg-linear-to-b from-cyan-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl"></div>
+                      <div className="relative w-full h-full rounded-full border border-cyan-500/30 bg-black/50 backdrop-blur-md shadow-[0_0_15px_rgba(0,212,255,0.2)] flex items-center justify-center overflow-hidden group-hover:border-cyan-500/60 group-hover:shadow-[0_0_20px_rgba(0,212,255,0.4)] transition-all duration-500">
+                        <div className="absolute top-[10%] left-0 right-0 h-px bg-cyan-400/30 blur-[0.5px]"></div>
+                        <img src="/mateo.jpeg" alt="Mateo" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      </div>
+                    </div>
+                    <h3 className="text-white font-bold text-xl tracking-tight mb-2 group-hover:text-cyan-300 transition-colors duration-300">Mateo</h3>
+                    <p className="text-cyan-500/80 text-xs tracking-widest uppercase font-semibold">Lead Fullstack Engineer</p>
                   </div>
                 </div>
 
-                {/* Typography */}
-                <h3 className="text-white font-bold text-xl tracking-tight mb-2 group-hover:text-cyan-300 transition-colors duration-300">
-                  Mateo
-                </h3>
-                <p className="text-cyan-500/80 text-xs tracking-widest uppercase font-semibold">
-                  Lead Fullstack Engineer
-                </p>
+                <div className="group relative">
+                  <div className="backdrop-blur-md bg-white/[0.03] border-2 border-cyan-500/40 rounded-2xl p-6 shadow-[0_0_20px_rgba(0,212,255,0.15)] group-hover:border-cyan-500/70 group-hover:shadow-[0_0_30px_rgba(0,212,255,0.3)] transition-all duration-500">
+                    <div className="absolute top-3 left-3 w-4 h-4 border-t-2 border-l-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
+                    <div className="absolute top-3 right-3 w-4 h-4 border-t-2 border-r-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
+                    <div className="absolute bottom-3 left-3 w-4 h-4 border-b-2 border-l-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
+                    <div className="absolute bottom-3 right-3 w-4 h-4 border-b-2 border-r-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
+                    <div className="relative w-32 h-32 mx-auto mb-6">
+                      <div className="absolute inset-0 rounded-full bg-linear-to-b from-cyan-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl"></div>
+                      <div className="relative w-full h-full rounded-full border border-cyan-500/30 bg-black/50 backdrop-blur-md shadow-[0_0_15px_rgba(0,212,255,0.2)] flex items-center justify-center overflow-hidden group-hover:border-cyan-500/60 group-hover:shadow-[0_0_20px_rgba(0,212,255,0.4)] transition-all duration-500">
+                        <div className="absolute top-[10%] left-0 right-0 h-px bg-cyan-400/30 blur-[0.5px]"></div>
+                        <img src="/fotoLuis.jpg" alt="Luis" className="w-full h-full object-cover object-[center_35%] group-hover:scale-105 transition-transform duration-500" />
+                      </div>
+                    </div>
+                    <h3 className="text-white font-bold text-xl tracking-tight mb-2 group-hover:text-cyan-300 transition-colors duration-300">Luis</h3>
+                    <p className="text-cyan-500/80 text-xs tracking-widest uppercase font-semibold">Product Strategy & UX</p>
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Member 2: Luis */}
-            <div className="group relative">
-              <div className="backdrop-blur-md bg-white/[0.03] border-2 border-cyan-500/40 rounded-2xl p-6 shadow-[0_0_20px_rgba(0,212,255,0.15)] group-hover:border-cyan-500/70 group-hover:shadow-[0_0_30px_rgba(0,212,255,0.3)] transition-all duration-500">
-                <div className="absolute top-3 left-3 w-4 h-4 border-t-2 border-l-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
-                <div className="absolute top-3 right-3 w-4 h-4 border-t-2 border-r-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
-                <div className="absolute bottom-3 left-3 w-4 h-4 border-b-2 border-l-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
-                <div className="absolute bottom-3 right-3 w-4 h-4 border-b-2 border-r-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
-                <div className="relative w-32 h-32 mx-auto mb-6">
-                  <div className="absolute inset-0 rounded-full bg-linear-to-b from-cyan-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl"></div>
-                  <div className="relative w-full h-full rounded-full border border-cyan-500/30 bg-black/50 backdrop-blur-md shadow-[0_0_15px_rgba(0,212,255,0.2)] flex items-center justify-center overflow-hidden group-hover:border-cyan-500/60 group-hover:shadow-[0_0_20px_rgba(0,212,255,0.4)] transition-all duration-500">
-                    {/* Scanline Effect */}
-                    <div className="absolute top-[10%] left-0 right-0 h-px bg-cyan-400/30 blur-[0.5px]"></div>
-                    <img src="/fotoLuis.jpg" alt="Luis" className="w-full h-full object-cover object-[center_35%] group-hover:scale-105 transition-transform duration-500" />
+            <div className="flex flex-col bg-white/[0.02] backdrop-blur-sm border border-amber-500/20 rounded-3xl p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <svg className="w-5 h-5 text-amber-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path d="M18 20V10M12 20V4M6 20v-6" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <p className="text-amber-400 text-xs tracking-[0.25em] uppercase font-bold">Data Science & Business</p>
+              </div>
+              <div className="h-px bg-amber-400/40 mb-6" />
+
+              <div className="flex flex-col gap-6">
+                <div className="group relative">
+                  <div className="backdrop-blur-md bg-white/[0.03] border-2 border-amber-500/40 rounded-2xl p-6 shadow-[0_0_20px_rgba(251,191,36,0.15)] group-hover:border-amber-500/70 group-hover:shadow-[0_0_30px_rgba(251,191,36,0.3)] transition-all duration-500">
+                    <div className="absolute top-3 left-3 w-4 h-4 border-t-2 border-l-2 border-amber-400/0 group-hover:border-amber-400/60 transition-all duration-300"></div>
+                    <div className="absolute top-3 right-3 w-4 h-4 border-t-2 border-r-2 border-amber-400/0 group-hover:border-amber-400/60 transition-all duration-300"></div>
+                    <div className="absolute bottom-3 left-3 w-4 h-4 border-b-2 border-l-2 border-amber-400/0 group-hover:border-amber-400/60 transition-all duration-300"></div>
+                    <div className="absolute bottom-3 right-3 w-4 h-4 border-b-2 border-r-2 border-amber-400/0 group-hover:border-amber-400/60 transition-all duration-300"></div>
+                    <div className="relative w-32 h-32 mx-auto mb-6">
+                      <div className="absolute inset-0 rounded-full bg-linear-to-b from-amber-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl"></div>
+                      <div className="relative w-full h-full rounded-full border border-amber-500/30 bg-black/50 backdrop-blur-md shadow-[0_0_15px_rgba(251,191,36,0.2)] flex items-center justify-center overflow-hidden group-hover:border-amber-500/60 group-hover:shadow-[0_0_20px_rgba(251,191,36,0.4)] transition-all duration-500">
+                        <div className="absolute top-[10%] left-0 right-0 h-px bg-amber-400/30 blur-[0.5px]"></div>
+                        <img src="/marco.png" alt="Marco" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      </div>
+                    </div>
+                    <h3 className="text-white font-bold text-xl tracking-tight mb-2 group-hover:text-cyan-300 transition-colors duration-300">Marco</h3>
+                    <p className="text-amber-500/80 text-xs tracking-widest uppercase font-semibold">Data Scientist & Business Strategy</p>
                   </div>
                 </div>
-                <h3 className="text-white font-bold text-xl tracking-tight mb-2 group-hover:text-cyan-300 transition-colors duration-300">
-                  Luis
-                </h3>
-                <p className="text-cyan-500/80 text-xs tracking-widest uppercase font-semibold">
-                  Product Strategy & UX
-                </p>
+
+                <div className="group relative">
+                  <div className="backdrop-blur-md bg-white/[0.03] border-2 border-amber-500/40 rounded-2xl p-6 shadow-[0_0_20px_rgba(251,191,36,0.15)] group-hover:border-amber-500/70 group-hover:shadow-[0_0_30px_rgba(251,191,36,0.3)] transition-all duration-500">
+                    <div className="absolute top-3 left-3 w-4 h-4 border-t-2 border-l-2 border-amber-400/0 group-hover:border-amber-400/60 transition-all duration-300"></div>
+                    <div className="absolute top-3 right-3 w-4 h-4 border-t-2 border-r-2 border-amber-400/0 group-hover:border-amber-400/60 transition-all duration-300"></div>
+                    <div className="absolute bottom-3 left-3 w-4 h-4 border-b-2 border-l-2 border-amber-400/0 group-hover:border-amber-400/60 transition-all duration-300"></div>
+                    <div className="absolute bottom-3 right-3 w-4 h-4 border-b-2 border-r-2 border-amber-400/0 group-hover:border-amber-400/60 transition-all duration-300"></div>
+                    <div className="relative w-32 h-32 mx-auto mb-6">
+                      <div className="absolute inset-0 rounded-full bg-linear-to-b from-amber-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl"></div>
+                      <div className="relative w-full h-full rounded-full border border-amber-500/30 bg-black/50 backdrop-blur-md shadow-[0_0_15px_rgba(251,191,36,0.2)] flex items-center justify-center overflow-hidden group-hover:border-amber-500/60 group-hover:shadow-[0_0_20px_rgba(251,191,36,0.4)] transition-all duration-500">
+                        <div className="absolute top-[10%] left-0 right-0 h-px bg-amber-400/30 blur-[0.5px]"></div>
+                        <img src="/varo.jpeg" alt="Álvaro" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      </div>
+                    </div>
+                    <h3 className="text-white font-bold text-xl tracking-tight mb-2 group-hover:text-cyan-300 transition-colors duration-300">Álvaro</h3>
+                    <p className="text-amber-500/80 text-xs tracking-widest uppercase font-semibold">Lead ML & AI Engineer</p>
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Member 3: Álvaro */}
-            <div className="group relative">
-              <div className="backdrop-blur-md bg-white/[0.03] border-2 border-cyan-500/40 rounded-2xl p-6 shadow-[0_0_20px_rgba(0,212,255,0.15)] group-hover:border-cyan-500/70 group-hover:shadow-[0_0_30px_rgba(0,212,255,0.3)] transition-all duration-500">
-                <div className="absolute top-3 left-3 w-4 h-4 border-t-2 border-l-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
-                <div className="absolute top-3 right-3 w-4 h-4 border-t-2 border-r-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
-                <div className="absolute bottom-3 left-3 w-4 h-4 border-b-2 border-l-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
-                <div className="absolute bottom-3 right-3 w-4 h-4 border-b-2 border-r-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
-                <div className="relative w-32 h-32 mx-auto mb-6">
-                  <div className="absolute inset-0 rounded-full bg-linear-to-b from-cyan-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl"></div>
-                  <div className="relative w-full h-full rounded-full border border-cyan-500/30 bg-black/50 backdrop-blur-md shadow-[0_0_15px_rgba(0,212,255,0.2)] flex items-center justify-center overflow-hidden group-hover:border-cyan-500/60 group-hover:shadow-[0_0_20px_rgba(0,212,255,0.4)] transition-all duration-500">
-                    {/* Scanline Effect */}
-                    <div className="absolute top-[10%] left-0 right-0 h-px bg-cyan-400/30 blur-[0.5px]"></div>
-                    <img src="/varo.jpeg" alt="Álvaro" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                  </div>
-                </div>
-                <h3 className="text-white font-bold text-xl tracking-tight mb-2 group-hover:text-cyan-300 transition-colors duration-300">
-                  Álvaro
-                </h3>
-                <p className="text-cyan-500/80 text-xs tracking-widest uppercase font-semibold">
-                  Lead ML & AI Engineer
-                </p>
+            <div className="flex flex-col bg-white/[0.02] backdrop-blur-sm border border-emerald-500/20 rounded-3xl p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <svg className="w-5 h-5 text-emerald-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path d="M12 6v12M6 12h12" strokeLinecap="round" strokeLinejoin="round" />
+                  <rect x="3" y="3" width="18" height="18" rx="4" />
+                </svg>
+                <p className="text-emerald-400 text-xs tracking-[0.25em] uppercase font-bold">Clinical & Biomedical</p>
               </div>
-            </div>
+              <div className="h-px bg-emerald-400/40 mb-6" />
 
-            {/* Member 4: Marco */}
-            <div className="group relative">
-              <div className="backdrop-blur-md bg-white/[0.03] border-2 border-cyan-500/40 rounded-2xl p-6 shadow-[0_0_20px_rgba(0,212,255,0.15)] group-hover:border-cyan-500/70 group-hover:shadow-[0_0_30px_rgba(0,212,255,0.3)] transition-all duration-500">
-                <div className="absolute top-3 left-3 w-4 h-4 border-t-2 border-l-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
-                <div className="absolute top-3 right-3 w-4 h-4 border-t-2 border-r-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
-                <div className="absolute bottom-3 left-3 w-4 h-4 border-b-2 border-l-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
-                <div className="absolute bottom-3 right-3 w-4 h-4 border-b-2 border-r-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
-                <div className="relative w-32 h-32 mx-auto mb-6">
-                  <div className="absolute inset-0 rounded-full bg-linear-to-b from-cyan-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl"></div>
-                  <div className="relative w-full h-full rounded-full border border-cyan-500/30 bg-black/50 backdrop-blur-md shadow-[0_0_15px_rgba(0,212,255,0.2)] flex items-center justify-center overflow-hidden group-hover:border-cyan-500/60 group-hover:shadow-[0_0_20px_rgba(0,212,255,0.4)] transition-all duration-500">
-                    {/* Scanline Effect */}
-                    <div className="absolute top-[10%] left-0 right-0 h-px bg-cyan-400/30 blur-[0.5px]"></div>
-                    <img src="/marco.png" alt="Marco" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+              <div className="flex flex-col gap-6">
+                <div className="group relative">
+                  <div className="backdrop-blur-md bg-white/[0.03] border-2 border-emerald-500/40 rounded-2xl p-6 shadow-[0_0_20px_rgba(16,185,129,0.15)] group-hover:border-emerald-500/70 group-hover:shadow-[0_0_30px_rgba(16,185,129,0.3)] transition-all duration-500">
+                    <div className="absolute top-3 left-3 w-4 h-4 border-t-2 border-l-2 border-emerald-400/0 group-hover:border-emerald-400/60 transition-all duration-300"></div>
+                    <div className="absolute top-3 right-3 w-4 h-4 border-t-2 border-r-2 border-emerald-400/0 group-hover:border-emerald-400/60 transition-all duration-300"></div>
+                    <div className="absolute bottom-3 left-3 w-4 h-4 border-b-2 border-l-2 border-emerald-400/0 group-hover:border-emerald-400/60 transition-all duration-300"></div>
+                    <div className="absolute bottom-3 right-3 w-4 h-4 border-b-2 border-r-2 border-emerald-400/0 group-hover:border-emerald-400/60 transition-all duration-300"></div>
+                    <div className="relative w-32 h-32 mx-auto mb-6">
+                      <div className="absolute inset-0 rounded-full bg-linear-to-b from-emerald-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl"></div>
+                      <div className="relative w-full h-full rounded-full border border-emerald-500/30 bg-black/50 backdrop-blur-md shadow-[0_0_15px_rgba(16,185,129,0.2)] flex items-center justify-center overflow-hidden group-hover:border-emerald-500/60 group-hover:shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all duration-500">
+                        <div className="absolute top-[10%] left-0 right-0 h-px bg-emerald-400/30 blur-[0.5px]"></div>
+                        <img src="/helene.png" alt="Helene" className="w-full h-full object-cover object-[center_35%] scale-115 group-hover:scale-120 transition-transform duration-500" />
+                      </div>
+                    </div>
+                    <h3 className="text-white font-bold text-xl tracking-tight mb-2 group-hover:text-cyan-300 transition-colors duration-300">Helene</h3>
+                    <p className="text-emerald-500/80 text-xs tracking-widest uppercase font-semibold">Biomedical Engineer · Clinical Translation</p>
                   </div>
                 </div>
-                <h3 className="text-white font-bold text-xl tracking-tight mb-2 group-hover:text-cyan-300 transition-colors duration-300">
-                  Marco
-                </h3>
-                <p className="text-cyan-500/80 text-xs tracking-widest uppercase font-semibold">
-                  Data Scientist & Business Strategy
-                </p>
-              </div>
-            </div>
 
-            {/* Member 5: Helene */}
-            <div className="group relative">
-              <div className="backdrop-blur-md bg-white/[0.03] border-2 border-cyan-500/40 rounded-2xl p-6 shadow-[0_0_20px_rgba(0,212,255,0.15)] group-hover:border-cyan-500/70 group-hover:shadow-[0_0_30px_rgba(0,212,255,0.3)] transition-all duration-500">
-                <div className="absolute top-3 left-3 w-4 h-4 border-t-2 border-l-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
-                <div className="absolute top-3 right-3 w-4 h-4 border-t-2 border-r-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
-                <div className="absolute bottom-3 left-3 w-4 h-4 border-b-2 border-l-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
-                <div className="absolute bottom-3 right-3 w-4 h-4 border-b-2 border-r-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
-                <div className="relative w-32 h-32 mx-auto mb-6">
-                  <div className="absolute inset-0 rounded-full bg-linear-to-b from-cyan-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl"></div>
-                  <div className="relative w-full h-full rounded-full border border-cyan-500/30 bg-black/50 backdrop-blur-md shadow-[0_0_15px_rgba(0,212,255,0.2)] flex items-center justify-center overflow-hidden group-hover:border-cyan-500/60 group-hover:shadow-[0_0_20px_rgba(0,212,255,0.4)] transition-all duration-500">
-                    {/* Scanline Effect */}
-                    <div className="absolute top-[10%] left-0 right-0 h-px bg-cyan-400/30 blur-[0.5px]"></div>
-                    <img src="/helene.png" alt="Helene" className="w-full h-full object-cover object-[center_35%] scale-115 group-hover:scale-120 transition-transform duration-500" />
+                <div className="group relative">
+                  <div className="backdrop-blur-md bg-white/[0.03] border-2 border-emerald-500/40 rounded-2xl p-6 shadow-[0_0_20px_rgba(16,185,129,0.15)] group-hover:border-emerald-500/70 group-hover:shadow-[0_0_30px_rgba(16,185,129,0.3)] transition-all duration-500">
+                    <div className="absolute top-3 left-3 w-4 h-4 border-t-2 border-l-2 border-emerald-400/0 group-hover:border-emerald-400/60 transition-all duration-300"></div>
+                    <div className="absolute top-3 right-3 w-4 h-4 border-t-2 border-r-2 border-emerald-400/0 group-hover:border-emerald-400/60 transition-all duration-300"></div>
+                    <div className="absolute bottom-3 left-3 w-4 h-4 border-b-2 border-l-2 border-emerald-400/0 group-hover:border-emerald-400/60 transition-all duration-300"></div>
+                    <div className="absolute bottom-3 right-3 w-4 h-4 border-b-2 border-r-2 border-emerald-400/0 group-hover:border-emerald-400/60 transition-all duration-300"></div>
+                    <div className="relative w-32 h-32 mx-auto mb-6">
+                      <div className="absolute inset-0 rounded-full bg-linear-to-b from-emerald-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl"></div>
+                      <div className="relative w-full h-full rounded-full border border-emerald-500/30 bg-black/50 backdrop-blur-md shadow-[0_0_15px_rgba(16,185,129,0.2)] flex items-center justify-center overflow-hidden group-hover:border-emerald-500/60 group-hover:shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all duration-500">
+                        <div className="absolute top-[10%] left-0 right-0 h-px bg-emerald-400/30 blur-[0.5px]"></div>
+                        <img src="/jose.jpeg" alt="José Antonio" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      </div>
+                    </div>
+                    <h3 className="text-white font-bold text-xl tracking-tight mb-2 group-hover:text-cyan-300 transition-colors duration-300">José Antonio</h3>
+                    <p className="text-emerald-500/80 text-xs tracking-widest uppercase font-semibold">Physician & Clinical Advisor</p>
                   </div>
                 </div>
-                <h3 className="text-white font-bold text-xl tracking-tight mb-2 group-hover:text-cyan-300 transition-colors duration-300">
-                  Helene
-                </h3>
-                <p className="text-cyan-500/80 text-xs tracking-widest uppercase font-semibold">
-                  Biomedical Engineer · Clinical-Technical Translation
-                </p>
-              </div>
-            </div>
-
-            {/* Member 6: José Antonio */}
-            <div className="group relative">
-              <div className="backdrop-blur-md bg-white/[0.03] border-2 border-cyan-500/40 rounded-2xl p-6 shadow-[0_0_20px_rgba(0,212,255,0.15)] group-hover:border-cyan-500/70 group-hover:shadow-[0_0_30px_rgba(0,212,255,0.3)] transition-all duration-500">
-                <div className="absolute top-3 left-3 w-4 h-4 border-t-2 border-l-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
-                <div className="absolute top-3 right-3 w-4 h-4 border-t-2 border-r-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
-                <div className="absolute bottom-3 left-3 w-4 h-4 border-b-2 border-l-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
-                <div className="absolute bottom-3 right-3 w-4 h-4 border-b-2 border-r-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
-                <div className="relative w-32 h-32 mx-auto mb-6">
-                  <div className="absolute inset-0 rounded-full bg-linear-to-b from-cyan-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl"></div>
-                  <div className="relative w-full h-full rounded-full border border-cyan-500/30 bg-black/50 backdrop-blur-md shadow-[0_0_15px_rgba(0,212,255,0.2)] flex items-center justify-center overflow-hidden group-hover:border-cyan-500/60 group-hover:shadow-[0_0_20px_rgba(0,212,255,0.4)] transition-all duration-500">
-                    {/* Scanline Effect */}
-                    <div className="absolute top-[10%] left-0 right-0 h-px bg-cyan-400/30 blur-[0.5px]"></div>
-                    <img src="/jose.jpeg" alt="José Antonio" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                  </div>
-                </div>
-                <h3 className="text-white font-bold text-xl tracking-tight mb-2 group-hover:text-cyan-300 transition-colors duration-300">
-                  José Antonio
-                </h3>
-                <p className="text-cyan-500/80 text-xs tracking-widest uppercase font-semibold">
-                  Physician & Clinical Advisor
-                </p>
               </div>
             </div>
 
