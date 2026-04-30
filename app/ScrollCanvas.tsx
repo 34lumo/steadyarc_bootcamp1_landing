@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import ClinicalDashboard from "./ClinicalDashboard";
+import NeuralDashboard from "./NeuralDashboard";
 
 const TOTAL_FRAMES = 1164;
 const BATCH_SIZE = 20;
@@ -102,6 +103,7 @@ export default function ScrollCanvas() {
   const systemCapacityRef = useRef<HTMLDivElement | null>(null);
   const cvMetricsHudRef = useRef<HTMLDivElement | null>(null);
   const deviceBadgeRef = useRef<HTMLDivElement | null>(null);
+  const neuralDashRef = useRef<HTMLDivElement | null>(null);
   const counterStartTimeRef = useRef<number | null>(null);
   const lastHUDUpdateRef = useRef<number>(0);
   const srtRef = useRef<HTMLSpanElement>(null);
@@ -338,6 +340,13 @@ export default function ScrollCanvas() {
       if (deviceBadge) {
         deviceBadge.style.opacity = String(deviceOpacity);
         deviceBadge.style.transform = `translateY(${deviceTransformY}px)`;
+      }
+
+      // Neural Dashboard: frames 565-720 (same as device section)
+      const neuralDash = neuralDashRef.current;
+      if (neuralDash) {
+        neuralDash.style.opacity = String(deviceOpacity);
+        neuralDash.style.transform = `translateY(${deviceTransformY}px)`;
       }
 
       // Direct DOM update for HUD numbers (100ms throttle)
@@ -727,6 +736,27 @@ export default function ScrollCanvas() {
         </div>
       )}
 
+      {/* Neural Dashboard - Section 6 (Game Section, Left Side) */}
+      {loaded && (
+        <div
+          ref={neuralDashRef}
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            opacity: 0,
+            pointerEvents: "none",
+            zIndex: 20,
+          }}
+        >
+          <div className="absolute top-1/2 left-6 -translate-y-1/2 w-[280px]">
+            <NeuralDashboard />
+          </div>
+        </div>
+      )}
+
       {/* Floating Asset Cards - Section 3 (Hardware Pivot) */}
       {loaded && assetsLoaded && (
         <div
@@ -982,48 +1012,7 @@ export default function ScrollCanvas() {
           </div>
         </div>
 
-        {/* Section 4: Trust & Backers (Logos) - Right before Team */}
-        <div ref={(el) => { revealRefs.current[3] = el; }} className="reveal w-full max-w-6xl px-6 py-24 text-center border-b border-white/5">
-          <p className="text-cyan-400/80 uppercase tracking-[0.2em] text-xs font-bold mb-12">
-            SUPPORTED BY INNOVATION LEADERS & TOP CLINICAL EXPERTS
-          </p>
-          <div className="flex flex-wrap justify-center items-start gap-8 md:gap-16 mt-12">
-
-            {/* Card 1: Harvard RCC */}
-            <div className="flex flex-col items-center gap-5 group breathe-slow">
-              <div className="w-64 h-32 bg-white/3 backdrop-blur-md border border-cyan-500/20 rounded-3xl flex items-center justify-center p-4 shadow-[0_0_20px_rgba(0,212,255,0.1)] group-hover:border-cyan-500/50 group-hover:shadow-[0_0_30px_rgba(0,212,255,0.2)] transition-all duration-500">
-                <img src="/rcc.png" alt="Harvard RCC" className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300" />
-              </div>
-              <p className="text-white/60 text-xs text-center font-medium tracking-wide max-w-50 leading-relaxed group-hover:text-cyan-300 transition-colors">
-                Real Colegio Complutense de Harvard University
-              </p>
-            </div>
-
-            {/* Card 2: AWS */}
-            <div className="flex flex-col items-center gap-5 group breathe-delayed">
-              <div className="w-56 h-28 bg-white/3 backdrop-blur-md border border-cyan-500/20 rounded-3xl flex items-center justify-center p-6 shadow-[0_0_20px_rgba(0,212,255,0.1)] group-hover:border-cyan-500/50 group-hover:shadow-[0_0_30px_rgba(0,212,255,0.2)] transition-all duration-500">
-                <img src="/aws.png" alt="AWS" className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300" />
-              </div>
-              <p className="text-white/60 text-xs text-center font-medium tracking-wide max-w-50 leading-relaxed group-hover:text-cyan-300 transition-colors">
-                AWS Spain
-              </p>
-            </div>
-
-            {/* Card 3: Saturno Labs */}
-            <div className="flex flex-col items-center gap-5 group drift-subtle">
-              <div className="w-56 h-28 bg-white/3 backdrop-blur-md border border-cyan-500/20 rounded-3xl flex items-center justify-center p-6 shadow-[0_0_20px_rgba(0,212,255,0.1)] group-hover:border-cyan-500/50 group-hover:shadow-[0_0_30px_rgba(0,212,255,0.2)] transition-all duration-500">
-                <img src="/saturno.png" alt="Saturno Labs" className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300" />
-              </div>
-              <p className="text-white/60 text-xs text-center font-medium tracking-wide max-w-50 leading-relaxed group-hover:text-cyan-300 transition-colors">
-                Saturno Labs
-              </p>
-            </div>
-
-          </div>
-        </div>
-
-        {/* Section 5: The Team */}
-        <div ref={(el) => { revealRefs.current[4] = el; }} className="reveal w-full max-w-6xl px-6 py-32 text-center border-b border-white/5 relative">
+        <div ref={(el) => { revealRefs.current[3] = el; }} className="reveal w-full max-w-6xl px-6 py-32 text-center border-b border-white/5 relative">
           {/* Tech Background Pattern with Radial Gradient */}
           <div className="absolute inset-0 bg-radial-gradient from-cyan-900/10 via-transparent to-transparent pointer-events-none"></div>
           <div className="absolute inset-0 opacity-20 pointer-events-none">
@@ -1185,6 +1174,42 @@ export default function ScrollCanvas() {
                   </div>
                 </div>
               </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div ref={(el) => { revealRefs.current[4] = el; }} className="reveal w-full max-w-6xl px-6 py-24 text-center border-b border-white/5">
+          <p className="text-cyan-400/80 uppercase tracking-[0.2em] text-xs font-bold mb-12">
+            SUPPORTED BY INNOVATION LEADERS & TOP CLINICAL EXPERTS
+          </p>
+          <div className="flex flex-wrap justify-center items-start gap-8 md:gap-16 mt-12">
+
+            <div className="flex flex-col items-center gap-5 group breathe-slow">
+              <div className="w-64 h-32 bg-white/3 backdrop-blur-md border border-cyan-500/20 rounded-3xl flex items-center justify-center p-4 shadow-[0_0_20px_rgba(0,212,255,0.1)] group-hover:border-cyan-500/50 group-hover:shadow-[0_0_30px_rgba(0,212,255,0.2)] transition-all duration-500">
+                <img src="/rcc.png" alt="Harvard RCC" className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300" />
+              </div>
+              <p className="text-white/60 text-xs text-center font-medium tracking-wide max-w-50 leading-relaxed group-hover:text-cyan-300 transition-colors">
+                Real Colegio Complutense de Harvard University
+              </p>
+            </div>
+
+            <div className="flex flex-col items-center gap-5 group breathe-delayed">
+              <div className="w-56 h-28 bg-white/3 backdrop-blur-md border border-cyan-500/20 rounded-3xl flex items-center justify-center p-6 shadow-[0_0_20px_rgba(0,212,255,0.1)] group-hover:border-cyan-500/50 group-hover:shadow-[0_0_30px_rgba(0,212,255,0.2)] transition-all duration-500">
+                <img src="/aws.png" alt="AWS" className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300" />
+              </div>
+              <p className="text-white/60 text-xs text-center font-medium tracking-wide max-w-50 leading-relaxed group-hover:text-cyan-300 transition-colors">
+                AWS Spain
+              </p>
+            </div>
+
+            <div className="flex flex-col items-center gap-5 group drift-subtle">
+              <div className="w-56 h-28 bg-white/3 backdrop-blur-md border border-cyan-500/20 rounded-3xl flex items-center justify-center p-6 shadow-[0_0_20px_rgba(0,212,255,0.1)] group-hover:border-cyan-500/50 group-hover:shadow-[0_0_30px_rgba(0,212,255,0.2)] transition-all duration-500">
+                <img src="/saturno.png" alt="Saturno Labs" className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300" />
+              </div>
+              <p className="text-white/60 text-xs text-center font-medium tracking-wide max-w-50 leading-relaxed group-hover:text-cyan-300 transition-colors">
+                Saturno Labs
+              </p>
             </div>
 
           </div>
