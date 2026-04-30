@@ -1,0 +1,1186 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+
+const TOTAL_FRAMES = 764;
+const BATCH_SIZE = 20;
+
+const sections = [
+  {
+    startFrame: 0,
+    endFrame: 45,
+    title: "SteadyArc",
+    sub: "Clinical insight for every day of recovery — not just appointment days."
+  },
+  {
+    startFrame: 45,
+    endFrame: 130,
+    title: "Recovery happens every day.",
+    sub: "But clinical insight usually doesn't. We started with a smart glove. Then we found a simpler answer."
+  },
+  {
+    startFrame: 130,
+    endFrame: 300,
+    title: "The core problem is scale.",
+    sub: "Far more patients than clinicians. Care is built around occasional check-ins, but recovery doesn't wait."
+  },
+  {
+    startFrame: 300,
+    endFrame: 405,
+    title: "We simplified the glove into pure software.",
+    sub: "No wearables. No complex setup. The same clinical insight — from any device with a camera."
+  },
+  {
+    startFrame: 405,
+    endFrame: 565,
+    title: "Early signs of recovery exist — but they go untracked.",
+    sub: "SteadyArc captures these signals through simple digital tasks. Patients play. Clinicians see the data."
+  },
+  {
+    startFrame: 565,
+    endFrame: 720,
+    title: "For patients, a game. For clinicians, a dashboard.",
+    sub: "Act earlier when something is wrong. Focus time where it matters most."
+  },
+  {
+    startFrame: 720,
+    endFrame: 764,
+    title: "SaaS. Starting with stroke. Built to scale.",
+    sub: "Per clinician or per patient. Expanding to Parkinson's. Backed by RCC Harvard, AWS, and Saturno Labs."
+  },
+];
+
+function getSectionOpacity(
+  progress: number,
+  section: { startFrame: number; endFrame: number }
+): number {
+  const start = section.startFrame / 763;
+  const end = section.endFrame / 763;
+  if (progress < start || progress > end) return 0;
+  const range = end - start;
+  if (range === 0) return 0;
+  const fadeZone = range * 0.2;
+  const fadeIn = fadeZone > 0 ? (progress - start) / fadeZone : 1;
+  const fadeOut = fadeZone > 0 ? (end - progress) / fadeZone : 1;
+  return Math.max(0, Math.min(1, fadeIn, fadeOut));
+}
+
+function getSectionTransform(
+  progress: number,
+  section: { startFrame: number; endFrame: number }
+): number {
+  const start = section.startFrame / 763;
+  const end = section.endFrame / 763;
+  if (progress < start || progress > end) return 0;
+  const range = end - start;
+  if (range === 0) return 0;
+  const fadeZone = range * 0.2;
+  const fadeIn = fadeZone > 0 ? (progress - start) / fadeZone : 1;
+  const fadeOut = fadeZone > 0 ? (end - progress) / fadeZone : 1;
+
+  // During fade in: interpolate from 30px down to 0px
+  if (fadeIn < 1) {
+    return 30 * (1 - fadeIn);
+  }
+  // During fade out: interpolate from 0px up to -30px
+  if (fadeOut < 1) {
+    return -30 * (1 - fadeOut);
+  }
+  return 0;
+}
+
+export default function ScrollCanvas() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const framesRef = useRef<HTMLImageElement[]>([]);
+  const scrollProgressRef = useRef(0);
+  const rafRef = useRef<number>(0);
+  const sectionRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const assetCardRef = useRef<HTMLDivElement | null>(null);
+  const recoveryGapRef = useRef<HTMLDivElement | null>(null);
+  const patientCounterRef = useRef<HTMLDivElement | null>(null);
+  const systemCapacityRef = useRef<HTMLDivElement | null>(null);
+  const cvMetricsHudRef = useRef<HTMLDivElement | null>(null);
+  const counterStartTimeRef = useRef<number | null>(null);
+  const lastHUDUpdateRef = useRef<number>(0);
+  const srtRef = useRef<HTMLSpanElement>(null);
+  const flexionRef = useRef<HTMLSpanElement>(null);
+  const smoothnessRef = useRef<HTMLSpanElement>(null);
+  const tremorRef = useRef<HTMLSpanElement>(null);
+  const ganadoresImgRef = useRef<HTMLImageElement | null>(null);
+  const guanteImgRef = useRef<HTMLImageElement | null>(null);
+  const revealRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const stickyBusinessRef = useRef<HTMLDivElement | null>(null);
+  const [loadedCount, setLoadedCount] = useState(0);
+  const [loaded, setLoaded] = useState(false);
+  const [assetsLoaded, setAssetsLoaded] = useState(false);
+  const [patientCount, setPatientCount] = useState("0");
+  const [businessCardProgress, setBusinessCardProgress] = useState(0);
+  const [debug, setDebug] = useState({ scrollY: 0, progressPct: 0, currentFrame: 0, scrollHeight: 0, windowHeight: 0 });
+
+
+  useEffect(() => {
+    const frames: HTMLImageElement[] = new Array(TOTAL_FRAMES);
+    let count = 0;
+    let cancelled = false;
+
+    // Preload floating asset images
+    const ganadoresImg = new Image();
+    const guanteImg = new Image();
+    ganadoresImg.src = "/GANADORES.jpeg";
+    guanteImg.src = "/GUANTE.jpeg";
+
+    let assetsLoadedCount = 0;
+    const checkAssetsLoaded = () => {
+      assetsLoadedCount++;
+      if (assetsLoadedCount === 2) {
+        ganadoresImgRef.current = ganadoresImg;
+        guanteImgRef.current = guanteImg;
+        setAssetsLoaded(true);
+      }
+    };
+    ganadoresImg.onload = checkAssetsLoaded;
+    ganadoresImg.onerror = checkAssetsLoaded;
+    guanteImg.onload = checkAssetsLoaded;
+    guanteImg.onerror = checkAssetsLoaded;
+
+    const loadBatch = (startIdx: number) => {
+      const end = Math.min(startIdx + BATCH_SIZE, TOTAL_FRAMES);
+      for (let i = startIdx; i < end; i++) {
+        const img = new Image();
+        img.src = `/frames/frame_${String(i + 1).padStart(4, "0")}.jpg`;
+        frames[i] = img;
+        const onDone = () => {
+          if (cancelled) return;
+          count++;
+          setLoadedCount(count);
+          if (count === TOTAL_FRAMES) {
+            framesRef.current = frames;
+            setLoaded(true);
+          }
+        };
+        img.onload = onDone;
+        img.onerror = onDone;
+      }
+      if (end < TOTAL_FRAMES) {
+        setTimeout(() => loadBatch(end), 0);
+      }
+    };
+
+    loadBatch(0);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+
+  // Intersection Observer for scroll reveals
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("reveal-visible");
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+
+    revealRefs.current.forEach((ref) => {
+      if (ref) observer.observe(ref);
+    });
+
+    return () => observer.disconnect();
+  }, [loaded]);
+
+  // Sticky business section scroll tracker
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!stickyBusinessRef.current) return;
+
+      const rect = stickyBusinessRef.current.getBoundingClientRect();
+      const containerHeight = stickyBusinessRef.current.offsetHeight;
+      const viewportHeight = window.innerHeight;
+
+      // Calculate progress through the sticky section (0 to 1)
+      const scrollProgress = Math.max(0, Math.min(1, -rect.top / (containerHeight - viewportHeight)));
+      setBusinessCardProgress(scrollProgress);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    handleScroll(); // Initial calculation
+
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [loaded]);
+
+  useEffect(() => {
+    if (!loaded) return;
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    resize();
+
+    window.addEventListener("resize", resize);
+
+    const render = () => {
+      const maxScroll =
+        document.documentElement.scrollHeight - window.innerHeight;
+      scrollProgressRef.current =
+        maxScroll > 0 ? window.scrollY / maxScroll : 0;
+
+      const progress = scrollProgressRef.current;
+      const frameIdx = Math.min(763, Math.max(0, Math.floor(progress * 763)));
+      const frame = framesRef.current[frameIdx];
+
+      if (frame?.complete && frame.naturalWidth > 0) {
+        const cw = canvas.width;
+        const ch = canvas.height;
+        const scale = Math.max(cw / frame.naturalWidth, ch / frame.naturalHeight);
+        const dw = frame.naturalWidth * scale;
+        const dh = frame.naturalHeight * scale;
+        ctx.drawImage(frame, (cw - dw) / 2, (ch - dh) / 2, dw, dh);
+      }
+
+      sections.forEach((section, i) => {
+        const el = sectionRefs.current[i];
+        if (el) {
+          const opacity = getSectionOpacity(progress, section);
+          const translateY = getSectionTransform(progress, section);
+          el.style.opacity = String(opacity);
+          el.style.transform = `translateY(${translateY}px)`;
+        }
+      });
+
+      // Section 2 (Recovery Gap): frames 65-130 (delayed from text)
+      const recoveryGapSection = { startFrame: 65, endFrame: 130 };
+      const recoveryGapOpacity = getSectionOpacity(progress, recoveryGapSection);
+      const recoveryGapTransformY = getSectionTransform(progress, recoveryGapSection);
+      const recoveryGap = recoveryGapRef.current;
+      if (recoveryGap) {
+        recoveryGap.style.opacity = String(recoveryGapOpacity);
+        recoveryGap.style.transform = `translateY(${recoveryGapTransformY}px)`;
+      }
+
+      // Section 2.5 (Patient Counter): frames 130-300
+      const patientCounterSection = { startFrame: 130, endFrame: 300 };
+      const counterOpacity = getSectionOpacity(progress, patientCounterSection);
+      const counterTransformY = getSectionTransform(progress, patientCounterSection);
+      const patientCounter = patientCounterRef.current;
+
+      // Calculate time-based counter value with ease-out
+      if (frameIdx >= 130 && frameIdx <= 300) {
+        // Initialize start time when section is first entered
+        if (counterStartTimeRef.current === null) {
+          counterStartTimeRef.current = performance.now();
+        }
+
+        // Calculate elapsed time (2000ms duration for the count)
+        const elapsed = performance.now() - counterStartTimeRef.current;
+        const duration = 2000;
+        let countProgress = Math.min(1, elapsed / duration);
+
+        // Apply an ease-out cubic function for premium decelerating effect
+        const easeOutProgress = 1 - Math.pow(1 - countProgress, 3);
+        const currentPatients = Math.floor(easeOutProgress * 795000);
+        const formattedPatients = currentPatients.toLocaleString('en-US');
+        setPatientCount(formattedPatients);
+      } else {
+        // Reset timer when outside the section
+        counterStartTimeRef.current = null;
+      }
+
+      if (patientCounter) {
+        patientCounter.style.opacity = String(counterOpacity);
+        patientCounter.style.transform = `translateY(${counterTransformY}px)`;
+      }
+
+      // System Capacity (Right Side of Section 3): frames 130-300
+      const systemCapacity = systemCapacityRef.current;
+      if (systemCapacity) {
+        systemCapacity.style.opacity = String(counterOpacity);
+        systemCapacity.style.transform = `translateY(${counterTransformY}px)`;
+      }
+
+      // Section 3 (Hardware pivot): frames 300-405
+      const hardwareSection = { startFrame: 300, endFrame: 405 };
+      const assetOpacity = getSectionOpacity(progress, hardwareSection);
+      const assetTransformY = getSectionTransform(progress, hardwareSection);
+      const assetCard = assetCardRef.current;
+      if (assetCard) {
+        assetCard.style.opacity = String(assetOpacity);
+        assetCard.style.transform = `translateY(${assetTransformY}px)`;
+      }
+
+      // Section 5 (CV Metrics HUD): frames 410-570
+      const cvMetricsSection = { startFrame: 410, endFrame: 570 };
+      const hudOpacity = getSectionOpacity(progress, cvMetricsSection);
+      const hudTransformY = getSectionTransform(progress, cvMetricsSection);
+      const cvMetricsHud = cvMetricsHudRef.current;
+      if (cvMetricsHud) {
+        cvMetricsHud.style.opacity = String(hudOpacity);
+        cvMetricsHud.style.transform = `translateY(${hudTransformY}px)`;
+      }
+
+      // Direct DOM update for HUD numbers (100ms throttle)
+      if (frameIdx >= 410 && frameIdx <= 570) {
+        const now = performance.now();
+        if (now - lastHUDUpdateRef.current > 100) {
+          if (srtRef.current) srtRef.current.innerText = Math.floor(115 + Math.random() * 21).toString();
+          if (flexionRef.current) flexionRef.current.innerText = Math.floor(88 + Math.random() * 6).toString();
+          if (smoothnessRef.current) smoothnessRef.current.innerText = (89.1 + Math.random() * 3.4).toFixed(1);
+          if (tremorRef.current) tremorRef.current.innerText = (1.2 + Math.random() * 0.6).toFixed(1);
+
+          lastHUDUpdateRef.current = now;
+        }
+      }
+
+      setDebug({
+        scrollY: Math.round(window.scrollY),
+        progressPct: maxScroll > 0 ? (window.scrollY / maxScroll) * 100 : 0,
+        currentFrame: frameIdx,
+        scrollHeight: document.body.scrollHeight,
+        windowHeight: window.innerHeight,
+      });
+
+      rafRef.current = requestAnimationFrame(render);
+    };
+
+    rafRef.current = requestAnimationFrame(render);
+
+    return () => {
+      window.removeEventListener("resize", resize);
+      cancelAnimationFrame(rafRef.current);
+    };
+  }, [loaded]);
+
+  return (
+    <>
+      {!loaded && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "#000",
+            zIndex: 100,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <h1
+            style={{
+              color: "#fff",
+              fontSize: 52,
+              fontWeight: 800,
+              letterSpacing: "-0.02em",
+            }}
+          >
+            SteadyArc
+          </h1>
+          <div
+            style={{
+              width: 300,
+              height: 3,
+              background: "#222",
+              borderRadius: 2,
+              marginTop: 32,
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                height: "100%",
+                background: "#fff",
+                borderRadius: 2,
+                width: `${(loadedCount / TOTAL_FRAMES) * 100}%`,
+                transition: "width 0.08s linear",
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      <div style={{ height: "12000px" }}>
+        {sections.map((section, i) => (
+          <div
+            key={i}
+            style={{
+              height: `${((section.endFrame - section.startFrame) / 764) * 12000}px`,
+            }}
+          />
+        ))}
+      </div>
+
+      <canvas
+        ref={canvasRef}
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: "100vw",
+          height: "100vh",
+          display: loaded ? "block" : "none",
+          zIndex: 0,
+        }}
+      />
+
+      {loaded &&
+        sections.map((section, i) => (
+          <div
+            key={i}
+            ref={(el) => {
+              sectionRefs.current[i] = el;
+            }}
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              opacity: 0,
+              pointerEvents: "none",
+              zIndex: 10,
+            }}
+          >
+            {/* Cinematic vignette: ultra-smooth full-width gradient from bottom to top */}
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                background:
+                  "linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 50%, transparent 100%)",
+              }}
+            />
+            <div
+              className="absolute left-1/2 -translate-x-1/2 text-center w-[85%] max-w-[920px]"
+              style={{ top: "65%" }}
+            >
+              <h2 className="font-extrabold tracking-tighter text-5xl md:text-6xl text-transparent bg-clip-text bg-gradient-to-b from-white to-white/70 drop-shadow-[0_0_20px_rgba(0,212,255,0.3)] leading-tight m-0">
+                {section.title}
+              </h2>
+
+              {section.sub && (
+                <>
+                  <div className="w-12 h-1 bg-cyan-400 rounded-full my-6 mx-auto shadow-[0_0_10px_rgba(34,211,238,0.6)]"></div>
+                  <p className="font-medium tracking-wide text-xl md:text-2xl text-cyan-50/80 leading-relaxed m-0">
+                    {section.sub}
+                  </p>
+                </>
+              )}
+            </div>
+          </div>
+        ))}
+
+      {/* Recovery Gap Visualization - Section 2 (Projected Data Only) */}
+      {loaded && (
+        <div
+          ref={recoveryGapRef}
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            opacity: 0,
+            pointerEvents: "none",
+            zIndex: 20,
+          }}
+        >
+          {/* Projected Data Timeline - Right Side (NO BOX) */}
+          <div className="absolute top-1/2 right-20 -translate-y-1/2">
+            {/* Vertical Timeline */}
+            <div className="relative">
+              {/* Timeline Spine */}
+              <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-linear-to-b from-cyan-400/0 via-cyan-400 to-cyan-400/0 shadow-[0_0_10px_rgba(34,211,238,0.6)]" />
+
+              {/* BLINDSPOT: 6 DAYS */}
+              <div className="mb-16 pl-6">
+                <div className="absolute left-0 w-3 h-3 rounded-full bg-red-500 shadow-[0_0_15px_rgba(239,68,68,0.8)] -translate-x-1" />
+                <p className="text-red-500 text-3xl font-extrabold tracking-tight drop-shadow-[0_0_12px_rgba(239,68,68,0.6)]">
+                  BLINDSPOT
+                </p>
+                <p className="text-red-400 text-5xl font-extrabold tracking-tighter mt-1 drop-shadow-[0_0_15px_rgba(239,68,68,0.8)]">
+                  6 DAYS
+                </p>
+                <div className="w-32 h-1 bg-red-500/60 mt-3 shadow-[0_0_10px_rgba(239,68,68,0.6)]" style={{ width: '128px' }} />
+              </div>
+
+              {/* INSIGHT: 1 DAY */}
+              <div className="pl-6">
+                <div className="absolute left-0 w-3 h-3 rounded-full bg-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.8)] -translate-x-1" />
+                <p className="text-cyan-400 text-3xl font-extrabold tracking-tight drop-shadow-[0_0_12px_rgba(34,211,238,0.6)]">
+                  INSIGHT
+                </p>
+                <p className="text-cyan-300 text-5xl font-extrabold tracking-tighter mt-1 drop-shadow-[0_0_15px_rgba(34,211,238,0.8)]">
+                  1 DAY
+                </p>
+                <div className="w-8 h-1 bg-cyan-400 mt-3 shadow-[0_0_10px_rgba(34,211,238,0.8)]" style={{ width: '32px' }} />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Patient Counter - Section 2.5 (Scroll-Linked Dynamic Counter) */}
+      {loaded && (
+        <div
+          ref={patientCounterRef}
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            opacity: 0,
+            pointerEvents: "none",
+            zIndex: 20,
+          }}
+        >
+          {/* Massive Counter - Left Side (NO BOX) */}
+          <div className="absolute top-1/2 left-12 -translate-y-1/2">
+            <p className="text-7xl md:text-8xl font-extrabold tracking-tighter text-transparent bg-clip-text bg-linear-to-b from-white to-white/30 drop-shadow-[0_0_30px_rgba(0,212,255,0.4)] leading-none">
+              {patientCount}
+            </p>
+            <p className="text-cyan-400 text-lg tracking-widest uppercase font-semibold mt-2 drop-shadow-[0_0_10px_rgba(34,211,238,0.6)]">
+              NEW CASES / YEAR
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* System Capacity - Section 3 Right Side (Diegetic CV Projection) */}
+      {loaded && (
+        <div
+          ref={systemCapacityRef}
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            opacity: 0,
+            pointerEvents: "none",
+            zIndex: 20,
+          }}
+        >
+          {/* Capacity Data Stack - Right Side (NO BOX) */}
+          <div className="absolute top-1/2 right-12 -translate-y-1/2 text-right">
+            {/* Top Label */}
+            <p className="text-cyan-400 text-sm tracking-[0.2em] uppercase font-bold mb-4 opacity-80 drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]">
+              U.S. NEUROLOGY CAPACITY
+            </p>
+
+            {/* Data Point 1: Living Survivors */}
+            <p className="text-white text-3xl font-bold tracking-tight drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
+              9,000,000
+            </p>
+            <p className="text-white/60 text-xs tracking-widest uppercase mb-6">
+              LIVING SURVIVORS
+            </p>
+
+            {/* Data Point 2: Active Neurologists */}
+            <p className="text-white text-3xl font-bold tracking-tight drop-shadow-[0_0_15px_rgba(0,212,255,0.4)]">
+              13,350
+            </p>
+            <p className="text-white/60 text-xs tracking-widest uppercase mb-6">
+              ACTIVE NEUROLOGISTS
+            </p>
+
+            {/* Accent Line */}
+            <div className="w-24 h-0.5 bg-cyan-400 ml-auto mb-4 shadow-[0_0_10px_rgba(34,211,238,0.6)]" />
+
+            {/* The Ratio (The Kicker) */}
+            <p className="text-cyan-300 text-5xl font-extrabold tracking-tighter drop-shadow-[0_0_25px_rgba(0,212,255,0.5)] mb-2">
+              673 : 1
+            </p>
+            <p className="text-cyan-400/80 text-xs tracking-widest uppercase drop-shadow-[0_0_8px_rgba(34,211,238,0.4)]">
+              PATIENT TO DOCTOR RATIO
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Clinical Metrics HUD - Section 5 (Live Analysis, 2 Left + 2 Right) */}
+      {loaded && (
+        <div
+          ref={cvMetricsHudRef}
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            opacity: 0,
+            pointerEvents: "none",
+            zIndex: 20,
+          }}
+        >
+          {/* LEFT SIDE - 2 Metrics */}
+          <div className="absolute top-1/2 left-12 -translate-y-1/2 flex flex-col gap-8 text-left">
+            {/* Left 1: SRT */}
+            <div>
+              <p className="text-cyan-400/80 text-xs tracking-[0.2em] uppercase font-bold mb-2 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]">
+                [ SIMPLE REACTION TIME ]
+              </p>
+              <p className="text-white text-4xl font-bold tracking-tight drop-shadow-[0_0_15px_rgba(255,255,255,0.4)] font-mono">
+                <span ref={srtRef}>125</span> ms
+              </p>
+            </div>
+
+            {/* Left 2: Flexion Range */}
+            <div>
+              <p className="text-cyan-400/80 text-xs tracking-[0.2em] uppercase font-bold mb-2 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]">
+                [ FINGER FLEXION RANGE ]
+              </p>
+              <p className="text-white text-4xl font-bold tracking-tight drop-shadow-[0_0_15px_rgba(255,255,255,0.4)] font-mono">
+                <span ref={flexionRef}>90</span>°
+              </p>
+            </div>
+          </div>
+
+          {/* RIGHT SIDE - 2 Metrics */}
+          <div className="absolute top-1/2 right-12 -translate-y-1/2 flex flex-col gap-8 text-right">
+            {/* Right 1: Smoothness Score */}
+            <div>
+              <p className="text-cyan-400/80 text-xs tracking-[0.2em] uppercase font-bold mb-2 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]">
+                [ MOVEMENT SMOOTHNESS SCORE ]
+              </p>
+              <p className="text-white text-4xl font-bold tracking-tight drop-shadow-[0_0_15px_rgba(255,255,255,0.4)] font-mono">
+                <span ref={smoothnessRef}>90.5</span>
+              </p>
+            </div>
+
+            {/* Right 2: Tremor Amplitude */}
+            <div>
+              <p className="text-cyan-400/80 text-xs tracking-[0.2em] uppercase font-bold mb-2 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]">
+                [ TREMOR AMPLITUDE ]
+              </p>
+              <p className="text-white text-4xl font-bold tracking-tight drop-shadow-[0_0_15px_rgba(255,255,255,0.4)] font-mono">
+                <span ref={tremorRef}>1.5</span> mm
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Asset Cards - Section 3 (Hardware Pivot) */}
+      {loaded && assetsLoaded && (
+        <div
+          ref={assetCardRef}
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            opacity: 0,
+            pointerEvents: "none",
+            zIndex: 20,
+          }}
+        >
+          {/* Left Card - Ganadores */}
+          <div className="absolute top-1/2 -translate-y-1/2 left-10 bg-gray-900/80 backdrop-blur-md border border-white/10 rounded-2xl p-4 shadow-[0_0_20px_rgba(0,212,255,0.2)] transition-all duration-300 ease-out w-72">
+            <img
+              src="/GANADORES.jpeg"
+              alt="HSIL 2026 Winners"
+              className="w-full h-auto rounded-lg"
+            />
+            <p className="text-white text-center text-sm mt-3 font-medium">
+              HSIL 2026 Winners
+            </p>
+          </div>
+
+          {/* Right Card - Guante */}
+          <div className="absolute top-1/2 -translate-y-1/2 right-10 bg-gray-900/80 backdrop-blur-md border border-white/10 rounded-2xl p-4 shadow-[0_0_20px_rgba(0,212,255,0.2)] transition-all duration-300 ease-out w-72">
+            <img
+              src="/GUANTE.jpeg"
+              alt="Original Smart Glove Prototype"
+              className="w-full h-auto rounded-lg"
+            />
+            <p className="text-white text-center text-sm mt-3 font-medium">
+              Original Smart Glove Prototype
+            </p>
+          </div>
+        </div>
+      )}
+
+
+      {/* Standard Web Sections - CSS-only positioning to prevent overlap */}
+      <div
+        className="relative z-30 w-full bg-[#050505]"
+        style={{ marginTop: 'calc(12000px + 500vh)' }}
+      >
+        {/* Smooth Gradient Fade Transition - Positioned Above */}
+        <div className="absolute top-0 left-0 w-full h-[150vh] -translate-y-full bg-linear-to-b from-transparent to-[#050505] pointer-events-none"></div>
+
+        {/* Content Wrapper */}
+        <div className="w-full flex flex-col items-center pb-32">
+
+        {/* Section 1: Epic Sequential Business Model (Sticky Scroll) */}
+        <div ref={stickyBusinessRef} className="relative h-[600vh] w-full">
+          <div className="sticky top-0 h-screen w-full flex items-center justify-center overflow-hidden">
+            {/* Animated CV Mesh Background */}
+            <div className="absolute inset-0 opacity-15 pointer-events-none">
+              <div className="absolute top-20 left-10 w-2 h-2 rounded-full bg-cyan-400 mesh-float"></div>
+              <div className="absolute top-32 left-32 w-1.5 h-1.5 rounded-full bg-cyan-400 mesh-float" style={{ animationDelay: '1s' }}></div>
+              <div className="absolute top-40 right-20 w-2 h-2 rounded-full bg-cyan-400 mesh-float" style={{ animationDelay: '2s' }}></div>
+              <div className="absolute bottom-32 left-20 w-1.5 h-1.5 rounded-full bg-cyan-400 mesh-float" style={{ animationDelay: '3s' }}></div>
+              <div className="absolute bottom-20 right-32 w-2 h-2 rounded-full bg-cyan-400 mesh-float" style={{ animationDelay: '4s' }}></div>
+            </div>
+
+            {/* Card 1: The Market (0-33%) */}
+            <div
+              className="absolute inset-0 flex flex-col items-center justify-center px-6 transition-all duration-700"
+              style={{
+                opacity: businessCardProgress < 0.33 ? 1 - (businessCardProgress / 0.33) : 0,
+                transform: `scale(${businessCardProgress < 0.33 ? 1 - (businessCardProgress / 0.33) * 0.2 : 0.8})`,
+                pointerEvents: businessCardProgress < 0.33 ? 'auto' : 'none'
+              }}
+            >
+              <div className="backdrop-blur-md bg-white/[0.03] border border-cyan-500/30 rounded-3xl p-16 max-w-4xl w-full shadow-[0_0_50px_rgba(0,212,255,0.2)] relative overflow-hidden">
+                {/* HIPAA Badge */}
+                <div className="absolute top-6 right-6 px-4 py-2 bg-cyan-500/20 border border-cyan-400/40 rounded-full">
+                  <p className="text-cyan-300 text-xs tracking-[0.2em] uppercase font-bold">HIPAA COMPLIANT</p>
+                </div>
+
+                {/* CV Keypoint Decoration */}
+                <div className="absolute top-8 left-8 w-12 h-12 border-2 border-cyan-400/40 rounded-full keypoint-spin"></div>
+                <div className="absolute top-12 left-12 w-4 h-4 bg-cyan-400/30 rounded-full"></div>
+
+                <p className="text-cyan-400 text-sm tracking-[0.3em] uppercase font-bold mb-8">THE MARKET</p>
+                <h2 className="text-5xl md:text-7xl font-extrabold tracking-tighter text-white mb-6">
+                  Starting with Post-<span className="text-cyan-300">Stroke</span> Rehabilitation.
+                </h2>
+                <p className="text-white/70 text-2xl mb-12 leading-relaxed">
+                  A large, urgent, and underserved need.
+                </p>
+
+                <div className="flex items-center gap-12 justify-center">
+                  <div>
+                    <p className="text-white text-6xl font-extrabold counter-animate">795k</p>
+                    <p className="text-white/60 text-lg mt-2">new cases/year</p>
+                  </div>
+                  <div className="w-px h-24 bg-cyan-400/30"></div>
+                  <div>
+                    <p className="text-white text-6xl font-extrabold">$1.2B</p>
+                    <p className="text-white/60 text-lg mt-2">rehab market</p>
+                  </div>
+                </div>
+
+                <p className="text-cyan-400/80 text-sm mt-12 tracking-wide">
+                  Available for Mobile (Gamified Patient App) & Computer (Clinician Dashboard)
+                </p>
+              </div>
+            </div>
+
+            {/* Card 2: The Value & Business Model (33-66%) */}
+            <div
+              className="absolute inset-0 flex flex-col items-center justify-center px-6 transition-all duration-700"
+              style={{
+                opacity: businessCardProgress >= 0.33 && businessCardProgress < 0.66
+                  ? Math.min(1, (businessCardProgress - 0.33) / 0.1) * (1 - Math.max(0, (businessCardProgress - 0.56) / 0.1))
+                  : 0,
+                transform: `scale(${businessCardProgress >= 0.33 && businessCardProgress < 0.66 ? 0.8 + Math.min(1, (businessCardProgress - 0.33) / 0.1) * 0.2 : 0.8})`,
+                pointerEvents: businessCardProgress >= 0.33 && businessCardProgress < 0.66 ? 'auto' : 'none'
+              }}
+            >
+              <div className="backdrop-blur-md bg-white/[0.03] border border-cyan-500/30 rounded-3xl p-16 max-w-5xl w-full shadow-[0_0_50px_rgba(0,212,255,0.2)] relative overflow-hidden">
+                {/* CV Keypoint Decoration */}
+                <div className="absolute top-8 right-8 w-12 h-12 border-2 border-cyan-400/40 rounded-full keypoint-spin" style={{ animationDelay: '5s' }}></div>
+                <div className="absolute top-12 right-12 w-4 h-4 bg-cyan-400/30 rounded-full"></div>
+
+                <div className="grid md:grid-cols-2 gap-12 items-center">
+                  <div>
+                    <p className="text-cyan-400 text-sm tracking-[0.3em] uppercase font-bold mb-6">THE VALUE</p>
+                    <h2 className="text-5xl md:text-6xl font-extrabold tracking-tighter text-white mb-6">
+                      B2B SaaS Model
+                    </h2>
+                    <p className="text-white/80 text-xl leading-relaxed mb-8">
+                      Clinics subscribe per clinician/patient. We don't just improve outcomes—we help providers manage <span className="text-cyan-300 font-bold text-3xl counter-animate">3x</span> more patients with the same resources.
+                    </p>
+                    <p className="text-cyan-400/70 text-sm italic">
+                      We are a telemonitoring platform, not a diagnostic tool.
+                    </p>
+                  </div>
+
+                  {/* Diegetic Clinician Dashboard Wireframe */}
+                  <div className="relative">
+                    <div className="backdrop-blur-sm bg-white/[0.02] border border-cyan-400/20 rounded-2xl p-6 shadow-[0_0_30px_rgba(0,212,255,0.15)]">
+                      <p className="text-cyan-400 text-xs tracking-[0.2em] uppercase font-bold mb-4">CLINICIAN DASHBOARD</p>
+
+                      {/* Mock Patient List */}
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-3 p-3 bg-white/[0.02] border border-cyan-400/10 rounded-lg">
+                          <div className="w-2 h-2 rounded-full bg-green-400"></div>
+                          <div className="flex-1">
+                            <p className="text-white/80 text-sm">Patient A</p>
+                            <p className="text-white/40 text-xs">SRT: 128ms ↑ 12%</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3 p-3 bg-white/[0.02] border border-cyan-400/10 rounded-lg">
+                          <div className="w-2 h-2 rounded-full bg-amber-400"></div>
+                          <div className="flex-1">
+                            <p className="text-white/80 text-sm">Patient B</p>
+                            <p className="text-white/40 text-xs">Flexion: 85° ↓ 3%</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3 p-3 bg-white/[0.02] border border-cyan-400/10 rounded-lg">
+                          <div className="w-2 h-2 rounded-full bg-green-400"></div>
+                          <div className="flex-1">
+                            <p className="text-white/80 text-sm">Patient C</p>
+                            <p className="text-white/40 text-xs">Smoothness: 91.2 ↑ 5%</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Mock Graph */}
+                      <div className="mt-4 h-24 bg-black/20 border border-cyan-400/10 rounded-lg relative overflow-hidden">
+                        <svg className="absolute inset-0 w-full h-full">
+                          <polyline points="10,80 30,70 50,50 70,45 90,40" fill="none" stroke="rgba(34,211,238,0.6)" strokeWidth="2" />
+                          <polyline points="10,85 30,80 50,75 70,70 90,68" fill="none" stroke="rgba(34,211,238,0.3)" strokeWidth="1" strokeDasharray="3,3" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 3: Expansion (66-100%) */}
+            <div
+              className="absolute inset-0 flex flex-col items-center justify-center px-6 transition-all duration-700"
+              style={{
+                opacity: businessCardProgress >= 0.66 ? Math.min(1, (businessCardProgress - 0.66) / 0.1) : 0,
+                transform: `scale(${businessCardProgress >= 0.66 ? 0.8 + Math.min(1, (businessCardProgress - 0.66) / 0.1) * 0.2 : 0.8})`,
+                pointerEvents: businessCardProgress >= 0.66 ? 'auto' : 'none'
+              }}
+            >
+              <div className="backdrop-blur-md bg-white/[0.03] border border-cyan-500/30 rounded-3xl p-16 max-w-4xl w-full shadow-[0_0_50px_rgba(0,212,255,0.2)] relative overflow-hidden">
+                {/* CV Keypoint Decoration */}
+                <div className="absolute top-8 left-8 w-12 h-12 border-2 border-cyan-400/40 rounded-full keypoint-spin" style={{ animationDelay: '10s' }}></div>
+                <div className="absolute top-12 left-12 w-4 h-4 bg-cyan-400/30 rounded-full"></div>
+
+                <p className="text-cyan-400 text-sm tracking-[0.3em] uppercase font-bold mb-8">EXPANSION</p>
+                <h2 className="text-5xl md:text-7xl font-extrabold tracking-tighter text-white mb-6">
+                  Beyond Stroke.
+                </h2>
+                <p className="text-white/80 text-2xl leading-relaxed mb-8">
+                  Architected to scale into Parkinson's and other neuro-degenerative recovery pathways.
+                </p>
+
+                <div className="flex flex-wrap gap-4 mt-12">
+                  <div className="px-6 py-3 bg-cyan-500/10 border border-cyan-400/30 rounded-full">
+                    <p className="text-cyan-300 font-semibold">Stroke</p>
+                  </div>
+                  <div className="px-6 py-3 bg-white/[0.02] border border-white/20 rounded-full">
+                    <p className="text-white/60 font-semibold">Parkinson's</p>
+                  </div>
+                  <div className="px-6 py-3 bg-white/[0.02] border border-white/20 rounded-full">
+                    <p className="text-white/60 font-semibold">MS</p>
+                  </div>
+                  <div className="px-6 py-3 bg-white/[0.02] border border-white/20 rounded-full">
+                    <p className="text-white/60 font-semibold">TBI</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Section 3: Next Steps */}
+        <div ref={(el) => { revealRefs.current[2] = el; }} className="reveal w-full max-w-6xl px-6 py-32 text-center border-b border-white/5 relative overflow-hidden">
+          {/* Animated CV Mesh Background */}
+          <div className="absolute inset-0 opacity-15 pointer-events-none">
+            {/* Floating Nodes */}
+            <div className="absolute top-16 left-16 w-2 h-2 rounded-full bg-amber-400 mesh-float"></div>
+            <div className="absolute top-28 right-24 w-1.5 h-1.5 rounded-full bg-amber-400 mesh-float" style={{ animationDelay: '1.5s' }}></div>
+            <div className="absolute bottom-24 left-1/4 w-2 h-2 rounded-full bg-amber-400 mesh-float" style={{ animationDelay: '2.5s' }}></div>
+            <div className="absolute bottom-16 right-1/3 w-1.5 h-1.5 rounded-full bg-amber-400 mesh-float" style={{ animationDelay: '3.5s' }}></div>
+
+            {/* Connecting Lines */}
+            <svg className="absolute inset-0 w-full h-full">
+              <line x1="8%" y1="18%" x2="20%" y2="35%" stroke="rgba(251,191,36,0.25)" strokeWidth="1" className="mesh-float" />
+              <line x1="88%" y1="25%" x2="70%" y2="40%" stroke="rgba(251,191,36,0.25)" strokeWidth="1" className="mesh-float" />
+            </svg>
+          </div>
+
+          <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-white mb-4 relative z-10">
+            Next Steps
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-16 max-w-5xl mx-auto relative z-10">
+            {/* Phase 1 */}
+            <div className="group relative breathe-slow">
+              <div className="backdrop-blur-md bg-white/[0.03] border border-amber-400/20 rounded-3xl p-10 shadow-[0_0_20px_rgba(251,191,36,0.1)] group-hover:border-amber-400/50 group-hover:shadow-[0_0_30px_rgba(251,191,36,0.25)] transition-all duration-700 text-left relative overflow-hidden">
+                {/* CV Keypoint Decoration */}
+                <div className="absolute top-4 right-4 w-10 h-10 border-2 border-amber-400/30 rounded-full keypoint-spin"></div>
+                <div className="absolute top-6 right-6 w-4 h-4 bg-amber-400/20 rounded-full phase-pulse"></div>
+
+                <p className="text-amber-400 text-sm tracking-[0.2em] uppercase font-bold mb-4">PHASE 1</p>
+                <h3 className="text-white text-2xl font-bold mb-4">Clinical Testing & Validation</h3>
+                <p className="text-white/80 text-base leading-relaxed">
+                  Leading hospitals in <span className="text-amber-300 font-semibold">Madrid, Spain</span>
+                </p>
+              </div>
+            </div>
+
+            {/* Phase 2 */}
+            <div className="group relative drift-subtle">
+              <div className="backdrop-blur-md bg-white/[0.03] border border-cyan-400/20 rounded-3xl p-10 shadow-[0_0_20px_rgba(0,212,255,0.1)] group-hover:border-cyan-400/50 group-hover:shadow-[0_0_30px_rgba(0,212,255,0.25)] transition-all duration-700 text-left relative overflow-hidden">
+                {/* Cyan CV Keypoint Decoration */}
+                <div className="absolute top-4 right-4 w-10 h-10 border-2 border-cyan-400/30 rounded-full keypoint-spin" style={{ animationDelay: '7s' }}></div>
+                <div className="absolute top-6 right-6 w-4 h-4 bg-cyan-400/20 rounded-full"></div>
+
+                <p className="text-cyan-400 text-sm tracking-[0.2em] uppercase font-bold mb-4">PHASE 2</p>
+                <h3 className="text-white text-2xl font-bold mb-4">Scaling & U.S. Market Entry</h3>
+                <p className="text-white/80 text-base leading-relaxed">
+                  Bringing the solution to the <span className="text-cyan-300 font-semibold">USA</span>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Section 4: Trust & Backers (Logos) - Right before Team */}
+        <div ref={(el) => { revealRefs.current[3] = el; }} className="reveal w-full max-w-6xl px-6 py-24 text-center border-b border-white/5">
+          <p className="text-cyan-400/80 uppercase tracking-[0.2em] text-xs font-bold mb-12">
+            SUPPORTED BY INNOVATION LEADERS & TOP CLINICAL EXPERTS
+          </p>
+          <div className="flex flex-wrap justify-center items-start gap-8 md:gap-16 mt-12">
+
+            {/* Card 1: Harvard RCC */}
+            <div className="flex flex-col items-center gap-5 group breathe-slow">
+              <div className="w-64 h-32 bg-white/3 backdrop-blur-md border border-cyan-500/20 rounded-3xl flex items-center justify-center p-4 shadow-[0_0_20px_rgba(0,212,255,0.1)] group-hover:border-cyan-500/50 group-hover:shadow-[0_0_30px_rgba(0,212,255,0.2)] transition-all duration-500">
+                <img src="/rcc.png" alt="Harvard RCC" className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300" />
+              </div>
+              <p className="text-white/60 text-xs text-center font-medium tracking-wide max-w-50 leading-relaxed group-hover:text-cyan-300 transition-colors">
+                Real Colegio Complutense de Harvard University
+              </p>
+            </div>
+
+            {/* Card 2: AWS */}
+            <div className="flex flex-col items-center gap-5 group breathe-delayed">
+              <div className="w-56 h-28 bg-white/3 backdrop-blur-md border border-cyan-500/20 rounded-3xl flex items-center justify-center p-6 shadow-[0_0_20px_rgba(0,212,255,0.1)] group-hover:border-cyan-500/50 group-hover:shadow-[0_0_30px_rgba(0,212,255,0.2)] transition-all duration-500">
+                <img src="/aws.png" alt="AWS" className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300" />
+              </div>
+              <p className="text-white/60 text-xs text-center font-medium tracking-wide max-w-50 leading-relaxed group-hover:text-cyan-300 transition-colors">
+                AWS Spain
+              </p>
+            </div>
+
+            {/* Card 3: Saturno Labs */}
+            <div className="flex flex-col items-center gap-5 group drift-subtle">
+              <div className="w-56 h-28 bg-white/3 backdrop-blur-md border border-cyan-500/20 rounded-3xl flex items-center justify-center p-6 shadow-[0_0_20px_rgba(0,212,255,0.1)] group-hover:border-cyan-500/50 group-hover:shadow-[0_0_30px_rgba(0,212,255,0.2)] transition-all duration-500">
+                <img src="/saturno.png" alt="Saturno Labs" className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300" />
+              </div>
+              <p className="text-white/60 text-xs text-center font-medium tracking-wide max-w-50 leading-relaxed group-hover:text-cyan-300 transition-colors">
+                Saturno Labs
+              </p>
+            </div>
+
+          </div>
+        </div>
+
+        {/* Section 5: The Team */}
+        <div ref={(el) => { revealRefs.current[4] = el; }} className="reveal w-full max-w-6xl px-6 py-32 text-center border-b border-white/5 relative">
+          {/* Tech Background Pattern with Radial Gradient */}
+          <div className="absolute inset-0 bg-radial-gradient from-cyan-900/10 via-transparent to-transparent pointer-events-none"></div>
+          <div className="absolute inset-0 opacity-20 pointer-events-none">
+            <div className="absolute top-10 left-10 w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></div>
+            <div className="absolute top-20 right-20 w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" style={{ animationDelay: '0.5s' }}></div>
+            <div className="absolute bottom-20 left-1/4 w-2 h-2 rounded-full bg-cyan-400 animate-pulse" style={{ animationDelay: '1s' }}></div>
+            <div className="absolute bottom-10 right-1/3 w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" style={{ animationDelay: '1.5s' }}></div>
+          </div>
+
+          <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-white mb-4 relative z-10">
+            Built to scale.
+          </h2>
+          <p className="text-cyan-50/70 text-lg mb-16 max-w-2xl mx-auto relative z-10">
+            A multidisciplinary team combining computer science, biomedical engineering, medicine, business, and AI.
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 mt-16 relative z-10">
+
+            {/* Member 1: Mateo */}
+            <div className="group relative">
+              {/* Premium Capsule Container */}
+              <div className="backdrop-blur-md bg-white/[0.03] border-2 border-cyan-500/40 rounded-2xl p-6 shadow-[0_0_20px_rgba(0,212,255,0.15)] group-hover:border-cyan-500/70 group-hover:shadow-[0_0_30px_rgba(0,212,255,0.3)] transition-all duration-500">
+
+                {/* Corner Scanner Lines */}
+                <div className="absolute top-3 left-3 w-4 h-4 border-t-2 border-l-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
+                <div className="absolute top-3 right-3 w-4 h-4 border-t-2 border-r-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
+                <div className="absolute bottom-3 left-3 w-4 h-4 border-b-2 border-l-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
+                <div className="absolute bottom-3 right-3 w-4 h-4 border-b-2 border-r-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
+
+                {/* Portrait with CV Frame */}
+                <div className="relative w-32 h-32 mx-auto mb-6">
+                  <div className="absolute inset-0 rounded-full bg-linear-to-b from-cyan-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl"></div>
+                  <div className="relative w-full h-full rounded-full border border-cyan-500/30 bg-black/50 backdrop-blur-md shadow-[0_0_15px_rgba(0,212,255,0.2)] flex items-center justify-center overflow-hidden group-hover:border-cyan-500/60 group-hover:shadow-[0_0_20px_rgba(0,212,255,0.4)] transition-all duration-500">
+                    {/* Scanline Effect */}
+                    <div className="absolute top-[10%] left-0 right-0 h-px bg-cyan-400/30 blur-[0.5px]"></div>
+                    <img src="/mateo.jpeg" alt="Mateo" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  </div>
+                </div>
+
+                {/* Typography */}
+                <h3 className="text-white font-bold text-xl tracking-tight mb-2 group-hover:text-cyan-300 transition-colors duration-300">
+                  Mateo
+                </h3>
+                <p className="text-cyan-500/80 text-xs tracking-widest uppercase font-semibold">
+                  Lead Fullstack Engineer
+                </p>
+              </div>
+            </div>
+
+            {/* Member 2: Luis */}
+            <div className="group relative">
+              <div className="backdrop-blur-md bg-white/[0.03] border-2 border-cyan-500/40 rounded-2xl p-6 shadow-[0_0_20px_rgba(0,212,255,0.15)] group-hover:border-cyan-500/70 group-hover:shadow-[0_0_30px_rgba(0,212,255,0.3)] transition-all duration-500">
+                <div className="absolute top-3 left-3 w-4 h-4 border-t-2 border-l-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
+                <div className="absolute top-3 right-3 w-4 h-4 border-t-2 border-r-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
+                <div className="absolute bottom-3 left-3 w-4 h-4 border-b-2 border-l-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
+                <div className="absolute bottom-3 right-3 w-4 h-4 border-b-2 border-r-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
+                <div className="relative w-32 h-32 mx-auto mb-6">
+                  <div className="absolute inset-0 rounded-full bg-linear-to-b from-cyan-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl"></div>
+                  <div className="relative w-full h-full rounded-full border border-cyan-500/30 bg-black/50 backdrop-blur-md shadow-[0_0_15px_rgba(0,212,255,0.2)] flex items-center justify-center overflow-hidden group-hover:border-cyan-500/60 group-hover:shadow-[0_0_20px_rgba(0,212,255,0.4)] transition-all duration-500">
+                    {/* Scanline Effect */}
+                    <div className="absolute top-[10%] left-0 right-0 h-px bg-cyan-400/30 blur-[0.5px]"></div>
+                    <img src="/fotoLuis.jpg" alt="Luis" className="w-full h-full object-cover object-[center_35%] group-hover:scale-105 transition-transform duration-500" />
+                  </div>
+                </div>
+                <h3 className="text-white font-bold text-xl tracking-tight mb-2 group-hover:text-cyan-300 transition-colors duration-300">
+                  Luis
+                </h3>
+                <p className="text-cyan-500/80 text-xs tracking-widest uppercase font-semibold">
+                  Product Strategy & UX
+                </p>
+              </div>
+            </div>
+
+            {/* Member 3: Álvaro */}
+            <div className="group relative">
+              <div className="backdrop-blur-md bg-white/[0.03] border-2 border-cyan-500/40 rounded-2xl p-6 shadow-[0_0_20px_rgba(0,212,255,0.15)] group-hover:border-cyan-500/70 group-hover:shadow-[0_0_30px_rgba(0,212,255,0.3)] transition-all duration-500">
+                <div className="absolute top-3 left-3 w-4 h-4 border-t-2 border-l-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
+                <div className="absolute top-3 right-3 w-4 h-4 border-t-2 border-r-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
+                <div className="absolute bottom-3 left-3 w-4 h-4 border-b-2 border-l-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
+                <div className="absolute bottom-3 right-3 w-4 h-4 border-b-2 border-r-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
+                <div className="relative w-32 h-32 mx-auto mb-6">
+                  <div className="absolute inset-0 rounded-full bg-linear-to-b from-cyan-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl"></div>
+                  <div className="relative w-full h-full rounded-full border border-cyan-500/30 bg-black/50 backdrop-blur-md shadow-[0_0_15px_rgba(0,212,255,0.2)] flex items-center justify-center overflow-hidden group-hover:border-cyan-500/60 group-hover:shadow-[0_0_20px_rgba(0,212,255,0.4)] transition-all duration-500">
+                    {/* Scanline Effect */}
+                    <div className="absolute top-[10%] left-0 right-0 h-px bg-cyan-400/30 blur-[0.5px]"></div>
+                    <img src="/varo.jpeg" alt="Álvaro" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  </div>
+                </div>
+                <h3 className="text-white font-bold text-xl tracking-tight mb-2 group-hover:text-cyan-300 transition-colors duration-300">
+                  Álvaro
+                </h3>
+                <p className="text-cyan-500/80 text-xs tracking-widest uppercase font-semibold">
+                  Lead ML & AI Engineer
+                </p>
+              </div>
+            </div>
+
+            {/* Member 4: Marco */}
+            <div className="group relative">
+              <div className="backdrop-blur-md bg-white/[0.03] border-2 border-cyan-500/40 rounded-2xl p-6 shadow-[0_0_20px_rgba(0,212,255,0.15)] group-hover:border-cyan-500/70 group-hover:shadow-[0_0_30px_rgba(0,212,255,0.3)] transition-all duration-500">
+                <div className="absolute top-3 left-3 w-4 h-4 border-t-2 border-l-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
+                <div className="absolute top-3 right-3 w-4 h-4 border-t-2 border-r-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
+                <div className="absolute bottom-3 left-3 w-4 h-4 border-b-2 border-l-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
+                <div className="absolute bottom-3 right-3 w-4 h-4 border-b-2 border-r-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
+                <div className="relative w-32 h-32 mx-auto mb-6">
+                  <div className="absolute inset-0 rounded-full bg-linear-to-b from-cyan-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl"></div>
+                  <div className="relative w-full h-full rounded-full border border-cyan-500/30 bg-black/50 backdrop-blur-md shadow-[0_0_15px_rgba(0,212,255,0.2)] flex items-center justify-center overflow-hidden group-hover:border-cyan-500/60 group-hover:shadow-[0_0_20px_rgba(0,212,255,0.4)] transition-all duration-500">
+                    {/* Scanline Effect */}
+                    <div className="absolute top-[10%] left-0 right-0 h-px bg-cyan-400/30 blur-[0.5px]"></div>
+                    <img src="/marco.png" alt="Marco" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  </div>
+                </div>
+                <h3 className="text-white font-bold text-xl tracking-tight mb-2 group-hover:text-cyan-300 transition-colors duration-300">
+                  Marco
+                </h3>
+                <p className="text-cyan-500/80 text-xs tracking-widest uppercase font-semibold">
+                  Data Scientist & Business Strategy
+                </p>
+              </div>
+            </div>
+
+            {/* Member 5: Helene */}
+            <div className="group relative">
+              <div className="backdrop-blur-md bg-white/[0.03] border-2 border-cyan-500/40 rounded-2xl p-6 shadow-[0_0_20px_rgba(0,212,255,0.15)] group-hover:border-cyan-500/70 group-hover:shadow-[0_0_30px_rgba(0,212,255,0.3)] transition-all duration-500">
+                <div className="absolute top-3 left-3 w-4 h-4 border-t-2 border-l-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
+                <div className="absolute top-3 right-3 w-4 h-4 border-t-2 border-r-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
+                <div className="absolute bottom-3 left-3 w-4 h-4 border-b-2 border-l-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
+                <div className="absolute bottom-3 right-3 w-4 h-4 border-b-2 border-r-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
+                <div className="relative w-32 h-32 mx-auto mb-6">
+                  <div className="absolute inset-0 rounded-full bg-linear-to-b from-cyan-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl"></div>
+                  <div className="relative w-full h-full rounded-full border border-cyan-500/30 bg-black/50 backdrop-blur-md shadow-[0_0_15px_rgba(0,212,255,0.2)] flex items-center justify-center overflow-hidden group-hover:border-cyan-500/60 group-hover:shadow-[0_0_20px_rgba(0,212,255,0.4)] transition-all duration-500">
+                    {/* Scanline Effect */}
+                    <div className="absolute top-[10%] left-0 right-0 h-px bg-cyan-400/30 blur-[0.5px]"></div>
+                    <img src="/helene.png" alt="Helene" className="w-full h-full object-cover object-[center_35%] scale-115 group-hover:scale-120 transition-transform duration-500" />
+                  </div>
+                </div>
+                <h3 className="text-white font-bold text-xl tracking-tight mb-2 group-hover:text-cyan-300 transition-colors duration-300">
+                  Helene
+                </h3>
+                <p className="text-cyan-500/80 text-xs tracking-widest uppercase font-semibold">
+                  Biomedical Engineer · Clinical-Technical Translation
+                </p>
+              </div>
+            </div>
+
+            {/* Member 6: José Antonio */}
+            <div className="group relative">
+              <div className="backdrop-blur-md bg-white/[0.03] border-2 border-cyan-500/40 rounded-2xl p-6 shadow-[0_0_20px_rgba(0,212,255,0.15)] group-hover:border-cyan-500/70 group-hover:shadow-[0_0_30px_rgba(0,212,255,0.3)] transition-all duration-500">
+                <div className="absolute top-3 left-3 w-4 h-4 border-t-2 border-l-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
+                <div className="absolute top-3 right-3 w-4 h-4 border-t-2 border-r-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
+                <div className="absolute bottom-3 left-3 w-4 h-4 border-b-2 border-l-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
+                <div className="absolute bottom-3 right-3 w-4 h-4 border-b-2 border-r-2 border-cyan-400/0 group-hover:border-cyan-400/60 transition-all duration-300"></div>
+                <div className="relative w-32 h-32 mx-auto mb-6">
+                  <div className="absolute inset-0 rounded-full bg-linear-to-b from-cyan-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl"></div>
+                  <div className="relative w-full h-full rounded-full border border-cyan-500/30 bg-black/50 backdrop-blur-md shadow-[0_0_15px_rgba(0,212,255,0.2)] flex items-center justify-center overflow-hidden group-hover:border-cyan-500/60 group-hover:shadow-[0_0_20px_rgba(0,212,255,0.4)] transition-all duration-500">
+                    {/* Scanline Effect */}
+                    <div className="absolute top-[10%] left-0 right-0 h-px bg-cyan-400/30 blur-[0.5px]"></div>
+                    <img src="/jose.jpeg" alt="José Antonio" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  </div>
+                </div>
+                <h3 className="text-white font-bold text-xl tracking-tight mb-2 group-hover:text-cyan-300 transition-colors duration-300">
+                  José Antonio
+                </h3>
+                <p className="text-cyan-500/80 text-xs tracking-widest uppercase font-semibold">
+                  Physician & Clinical Advisor
+                </p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        {/* Section 6: The Demo & The Ask (Bottom CTA) */}
+        <div ref={(el) => { revealRefs.current[5] = el; }} className="reveal w-full max-w-4xl px-6 py-40 text-center">
+          <p className="text-cyan-400 font-bold tracking-[0.2em] uppercase text-sm mb-6">
+            THE SOLUTION IN ACTION
+          </p>
+          <h2 className="text-white text-5xl md:text-7xl font-extrabold tracking-tighter mb-12">
+            Experience SteadyArc.
+          </h2>
+          <a
+            href="#"
+            className="inline-block bg-white text-black px-10 py-5 rounded-full font-bold text-lg hover:scale-105 transition-transform duration-300 shadow-[0_0_40px_rgba(255,255,255,0.15)]"
+          >
+            Watch the Demo
+          </a>
+        </div>
+
+        </div>
+      </div>
+    </>
+  );
+}
