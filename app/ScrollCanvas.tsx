@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-const TOTAL_FRAMES = 764;
+const TOTAL_FRAMES = 1164;
 const BATCH_SIZE = 20;
 
 const sections = [
@@ -54,8 +54,8 @@ function getSectionOpacity(
   progress: number,
   section: { startFrame: number; endFrame: number }
 ): number {
-  const start = section.startFrame / 763;
-  const end = section.endFrame / 763;
+  const start = section.startFrame / 1163;
+  const end = section.endFrame / 1163;
   if (progress < start || progress > end) return 0;
   const range = end - start;
   if (range === 0) return 0;
@@ -69,8 +69,8 @@ function getSectionTransform(
   progress: number,
   section: { startFrame: number; endFrame: number }
 ): number {
-  const start = section.startFrame / 763;
-  const end = section.endFrame / 763;
+  const start = section.startFrame / 1163;
+  const end = section.endFrame / 1163;
   if (progress < start || progress > end) return 0;
   const range = end - start;
   if (range === 0) return 0;
@@ -236,7 +236,7 @@ export default function ScrollCanvas() {
         maxScroll > 0 ? window.scrollY / maxScroll : 0;
 
       const progress = scrollProgressRef.current;
-      const frameIdx = Math.min(763, Math.max(0, Math.floor(progress * 763)));
+      const frameIdx = Math.min(1163, Math.max(0, Math.floor(progress * 1163)));
       const frame = framesRef.current[frameIdx];
 
       if (frame?.complete && frame.naturalWidth > 0) {
@@ -408,12 +408,12 @@ export default function ScrollCanvas() {
         </div>
       )}
 
-      <div style={{ height: "12000px" }}>
+      <div style={{ height: "30471px" }}>
         {sections.map((section, i) => (
           <div
             key={i}
             style={{
-              height: `${((section.endFrame - section.startFrame) / 764) * 12000}px`,
+              height: `${((section.endFrame - section.startFrame) / 764) * 30471}px`,
             }}
           />
         ))}
@@ -712,14 +712,13 @@ export default function ScrollCanvas() {
         </div>
       )}
 
-
       {/* Standard Web Sections - CSS-only positioning to prevent overlap */}
       <div
-        className="relative z-30 w-full bg-[#050505]"
-        style={{ marginTop: 'calc(12000px + 500vh)' }}
+        className="absolute left-0 w-full z-30 bg-[#050505]"
+        style={{ top: '23000px' }}
       >
         {/* Smooth Gradient Fade Transition - Positioned Above */}
-        <div className="absolute top-0 left-0 w-full h-[150vh] -translate-y-full bg-linear-to-b from-transparent to-[#050505] pointer-events-none"></div>
+        <div className="w-full h-[30vh] bg-gradient-to-b from-transparent to-[#050505] pointer-events-none"></div>
 
         {/* Content Wrapper */}
         <div className="w-full flex flex-col items-center pb-32">
@@ -738,11 +737,10 @@ export default function ScrollCanvas() {
 
             {/* Card 1: The Market (0-33%) */}
             <div
-              className="absolute inset-0 flex flex-col items-center justify-center px-6 transition-all duration-700"
+              className="absolute inset-0 flex flex-col items-center justify-center px-6 transition-all duration-300"
               style={{
-                opacity: businessCardProgress < 0.33 ? 1 - (businessCardProgress / 0.33) : 0,
-                transform: `scale(${businessCardProgress < 0.33 ? 1 - (businessCardProgress / 0.33) * 0.2 : 0.8})`,
-                pointerEvents: businessCardProgress < 0.33 ? 'auto' : 'none'
+                opacity: businessCardProgress < 0.3 ? 1 : businessCardProgress < 0.4 ? (0.4 - businessCardProgress) / 0.1 : 0,
+                transform: `scale(${businessCardProgress < 0.3 ? 1 : businessCardProgress < 0.4 ? 1 - ((businessCardProgress - 0.3) / 0.1) * 0.05 : 0.95})`
               }}
             >
               <div className="backdrop-blur-md bg-white/[0.03] border border-cyan-500/30 rounded-3xl p-16 max-w-4xl w-full shadow-[0_0_50px_rgba(0,212,255,0.2)] relative overflow-hidden">
@@ -783,13 +781,10 @@ export default function ScrollCanvas() {
 
             {/* Card 2: The Value & Business Model (33-66%) */}
             <div
-              className="absolute inset-0 flex flex-col items-center justify-center px-6 transition-all duration-700"
+              className="absolute inset-0 flex flex-col items-center justify-center px-6 transition-all duration-300"
               style={{
-                opacity: businessCardProgress >= 0.33 && businessCardProgress < 0.66
-                  ? Math.min(1, (businessCardProgress - 0.33) / 0.1) * (1 - Math.max(0, (businessCardProgress - 0.56) / 0.1))
-                  : 0,
-                transform: `scale(${businessCardProgress >= 0.33 && businessCardProgress < 0.66 ? 0.8 + Math.min(1, (businessCardProgress - 0.33) / 0.1) * 0.2 : 0.8})`,
-                pointerEvents: businessCardProgress >= 0.33 && businessCardProgress < 0.66 ? 'auto' : 'none'
+                opacity: businessCardProgress < 0.3 ? 0 : businessCardProgress < 0.4 ? (businessCardProgress - 0.3) / 0.1 : businessCardProgress < 0.6 ? 1 : businessCardProgress < 0.7 ? (0.7 - businessCardProgress) / 0.1 : 0,
+                transform: `scale(${businessCardProgress < 0.35 ? 0.97 : businessCardProgress < 0.4 ? 0.97 + ((businessCardProgress - 0.35) / 0.05) * 0.03 : businessCardProgress < 0.65 ? 1 : businessCardProgress < 0.7 ? 1 - ((businessCardProgress - 0.65) / 0.05) * 0.05 : 0.95})`
               }}
             >
               <div className="backdrop-blur-md bg-white/[0.03] border border-cyan-500/30 rounded-3xl p-16 max-w-5xl w-full shadow-[0_0_50px_rgba(0,212,255,0.2)] relative overflow-hidden">
@@ -856,11 +851,10 @@ export default function ScrollCanvas() {
 
             {/* Card 3: Expansion (66-100%) */}
             <div
-              className="absolute inset-0 flex flex-col items-center justify-center px-6 transition-all duration-700"
+              className="absolute inset-0 flex flex-col items-center justify-center px-6 transition-all duration-300"
               style={{
-                opacity: businessCardProgress >= 0.66 ? Math.min(1, (businessCardProgress - 0.66) / 0.1) : 0,
-                transform: `scale(${businessCardProgress >= 0.66 ? 0.8 + Math.min(1, (businessCardProgress - 0.66) / 0.1) * 0.2 : 0.8})`,
-                pointerEvents: businessCardProgress >= 0.66 ? 'auto' : 'none'
+                opacity: businessCardProgress < 0.6 ? 0 : businessCardProgress < 0.7 ? (businessCardProgress - 0.6) / 0.1 : 1,
+                transform: `scale(${businessCardProgress < 0.65 ? 0.97 : businessCardProgress < 0.7 ? 0.97 + ((businessCardProgress - 0.65) / 0.05) * 0.03 : 1})`
               }}
             >
               <div className="backdrop-blur-md bg-white/[0.03] border border-cyan-500/30 rounded-3xl p-16 max-w-4xl w-full shadow-[0_0_50px_rgba(0,212,255,0.2)] relative overflow-hidden">
