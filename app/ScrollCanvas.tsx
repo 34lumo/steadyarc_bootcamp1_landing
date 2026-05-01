@@ -498,7 +498,7 @@ export default function ScrollCanvas() {
             />
             <div
               className="absolute left-1/2 -translate-x-1/2 text-center w-[85%] max-w-[920px]"
-              style={{ top: "58%" }}
+              style={{ top: section.title2 && section.sub2 ? "48%" : "58%" }}
             >
               <h2 className="font-extrabold tracking-tighter text-5xl md:text-6xl text-transparent bg-clip-text bg-gradient-to-b from-white to-white/70 drop-shadow-[0_0_20px_rgba(0,212,255,0.3)] leading-tight m-0">
                 {section.title}
@@ -798,7 +798,7 @@ export default function ScrollCanvas() {
             zIndex: 20,
           }}
         >
-          <div className="absolute top-[40%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px]">
+          <div className="absolute top-[40%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[480px]">
             <NeuralDashboard />
           </div>
         </div>
