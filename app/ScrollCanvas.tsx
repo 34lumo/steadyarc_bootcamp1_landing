@@ -53,8 +53,9 @@ const sections = [
   {
     startFrame: 720,
     endFrame: 764,
-    title: "SaaS. Starting with stroke. Built to scale.",
-    sub: "Per clinician or per patient. Expanding to Parkinson's. Backed by RCC Harvard, AWS, and Saturno Labs.",
+    title: "From Gameplay to Clinical Clarity",
+    sub: "SteadyArc transforms at-home patient interactions into objective, real-time data.",
+    sub2: "We provide continuous visibility into motor recovery, enabling proactive decisions without the friction of extra hardware.",
   },
 ];
 
@@ -110,6 +111,7 @@ export default function ScrollCanvas() {
   const cvMetricsHudRef = useRef<HTMLDivElement | null>(null);
   const deviceBadgeRef = useRef<HTMLDivElement | null>(null);
   const neuralDashRef = useRef<HTMLDivElement | null>(null);
+  const neuralDashBigRef = useRef<HTMLDivElement | null>(null);
   const counterStartTimeRef = useRef<number | null>(null);
   const lastHUDUpdateRef = useRef<number>(0);
   const srtRef = useRef<HTMLSpanElement>(null);
@@ -348,11 +350,21 @@ export default function ScrollCanvas() {
         deviceBadge.style.transform = `translateY(${deviceTransformY}px)`;
       }
 
-      // Neural Dashboard: frames 565-720 (same as device section)
+      // Neural Dashboard Small: frames 565-720 (same as device section)
       const neuralDash = neuralDashRef.current;
       if (neuralDash) {
         neuralDash.style.opacity = String(deviceOpacity);
         neuralDash.style.transform = `translateY(${deviceTransformY}px)`;
+      }
+
+      // Neural Dashboard Big: frames 720-790 (next section after game, ends before black section)
+      const bigDashSection = { startFrame: 720, endFrame: 790 };
+      const bigDashOpacity = getSectionOpacity(progress, bigDashSection);
+      const bigDashTransformY = getSectionTransform(progress, bigDashSection);
+      const neuralDashBig = neuralDashBigRef.current;
+      if (neuralDashBig) {
+        neuralDashBig.style.opacity = String(bigDashOpacity);
+        neuralDashBig.style.transform = `translateY(${bigDashTransformY}px)`;
       }
 
       // Direct DOM update for HUD numbers (100ms throttle)
@@ -752,7 +764,7 @@ export default function ScrollCanvas() {
         </div>
       )}
 
-      {/* Neural Dashboard - Section 6 (Game Section, Left Side) */}
+      {/* Neural Dashboard Small - Section 6 (Game Section, Left Side) */}
       {loaded && (
         <div
           ref={neuralDashRef}
@@ -768,6 +780,27 @@ export default function ScrollCanvas() {
           }}
         >
           <div className="absolute top-1/2 left-6 -translate-y-1/2 w-[280px]">
+            <NeuralDashboard />
+          </div>
+        </div>
+      )}
+
+      {/* Neural Dashboard Big - Section 7 (Dashboard Focus, Centered) */}
+      {loaded && (
+        <div
+          ref={neuralDashBigRef}
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            opacity: 0,
+            pointerEvents: "none",
+            zIndex: 20,
+          }}
+        >
+          <div className="absolute top-[40%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px]">
             <NeuralDashboard />
           </div>
         </div>
@@ -816,17 +849,20 @@ export default function ScrollCanvas() {
 
       {/* Standard Web Sections - CSS-only positioning to prevent overlap */}
       <div
-        className="absolute left-0 w-full z-30 bg-[#050505]"
-        style={{ top: '23000px' }}
+        className="relative left-0 w-full z-30 bg-[#050505]"
+        style={{ position: 'absolute', top: '21000px' }}
       >
-        {/* Smooth Gradient Fade Transition - Positioned Above */}
-        <div className="w-full h-[30vh] bg-gradient-to-b from-transparent to-[#050505] pointer-events-none"></div>
+        {/* THE FIX: Smooth Gradient Fade (Difuminado) - Extends UPWARD over canvas */}
+        <div className="absolute top-0 left-0 w-full h-[50vh] -translate-y-full bg-linear-to-b from-transparent via-[#05050530] to-[#050505] pointer-events-none"></div>
+
+        {/* Smooth Gradient Fade Transition - Positioned Above (existing) */}
+        <div className="w-full h-[70vh] bg-linear-to-b from-transparent via-[#05050540] to-[#050505] pointer-events-none"></div>
 
         {/* Content Wrapper */}
         <div className="w-full flex flex-col items-center pb-32">
 
         {/* Section 1: Epic Sequential Business Model (Sticky Scroll) */}
-        <div ref={stickyBusinessRef} className="relative h-[600vh] w-full">
+        <div ref={stickyBusinessRef} className="relative h-[400vh] w-full">
           <div className="sticky top-0 h-screen w-full flex items-center justify-center overflow-hidden">
             {/* Animated CV Mesh Background */}
             <div className="absolute inset-0 opacity-15 pointer-events-none">
@@ -884,12 +920,12 @@ export default function ScrollCanvas() {
               </div>
             </div>
 
-            {/* Card 2: The Value & Business Model (33-66%) */}
+            {/* Card 2: The Value & Business Model (33-100%) */}
             <div
               className="absolute inset-0 flex flex-col items-center justify-center px-6 transition-all duration-300"
               style={{
-                opacity: businessCardProgress < 0.3 ? 0 : businessCardProgress < 0.4 ? (businessCardProgress - 0.3) / 0.1 : businessCardProgress < 0.6 ? 1 : businessCardProgress < 0.7 ? (0.7 - businessCardProgress) / 0.1 : 0,
-                transform: `scale(${businessCardProgress < 0.35 ? 0.97 : businessCardProgress < 0.4 ? 0.97 + ((businessCardProgress - 0.35) / 0.05) * 0.03 : businessCardProgress < 0.65 ? 1 : businessCardProgress < 0.7 ? 1 - ((businessCardProgress - 0.65) / 0.05) * 0.05 : 0.95})`
+                opacity: businessCardProgress < 0.3 ? 0 : businessCardProgress < 0.4 ? (businessCardProgress - 0.3) / 0.1 : 1,
+                transform: `scale(${businessCardProgress < 0.35 ? 0.97 : businessCardProgress < 0.4 ? 0.97 + ((businessCardProgress - 0.35) / 0.05) * 0.03 : 1})`
               }}
             >
               <div className="backdrop-blur-md bg-white/[0.03] border border-cyan-500/30 rounded-3xl p-16 max-w-5xl w-full shadow-[0_0_50px_rgba(0,212,255,0.2)] relative overflow-hidden">
@@ -924,43 +960,6 @@ export default function ScrollCanvas() {
               </div>
             </div>
 
-            {/* Card 3: Expansion (66-100%) */}
-            <div
-              className="absolute inset-0 flex flex-col items-center justify-center px-6 transition-all duration-300"
-              style={{
-                opacity: businessCardProgress < 0.6 ? 0 : businessCardProgress < 0.7 ? (businessCardProgress - 0.6) / 0.1 : 1,
-                transform: `scale(${businessCardProgress < 0.65 ? 0.97 : businessCardProgress < 0.7 ? 0.97 + ((businessCardProgress - 0.65) / 0.05) * 0.03 : 1})`
-              }}
-            >
-              <div className="backdrop-blur-md bg-white/[0.03] border border-cyan-500/30 rounded-3xl p-16 max-w-4xl w-full shadow-[0_0_50px_rgba(0,212,255,0.2)] relative overflow-hidden">
-                {/* CV Keypoint Decoration */}
-                <div className="absolute top-8 left-8 w-12 h-12 border-2 border-cyan-400/40 rounded-full keypoint-spin" style={{ animationDelay: '10s' }}></div>
-                <div className="absolute top-12 left-12 w-4 h-4 bg-cyan-400/30 rounded-full"></div>
-
-                <p className="text-cyan-400 text-sm tracking-[0.3em] uppercase font-bold mb-8">EXPANSION</p>
-                <h2 className="text-5xl md:text-7xl font-extrabold tracking-tighter text-white mb-6">
-                  Beyond Stroke.
-                </h2>
-                <p className="text-white/80 text-2xl leading-relaxed mb-8">
-                  Architected to scale into Parkinson's and other neuro-degenerative recovery pathways.
-                </p>
-
-                <div className="flex flex-wrap gap-4 mt-12">
-                  <div className="px-6 py-3 bg-cyan-500/10 border border-cyan-400/30 rounded-full">
-                    <p className="text-cyan-300 font-semibold">Stroke</p>
-                  </div>
-                  <div className="px-6 py-3 bg-white/[0.02] border border-white/20 rounded-full">
-                    <p className="text-white/60 font-semibold">Parkinson's</p>
-                  </div>
-                  <div className="px-6 py-3 bg-white/[0.02] border border-white/20 rounded-full">
-                    <p className="text-white/60 font-semibold">MS</p>
-                  </div>
-                  <div className="px-6 py-3 bg-white/[0.02] border border-white/20 rounded-full">
-                    <p className="text-white/60 font-semibold">TBI</p>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -1025,10 +1024,25 @@ export default function ScrollCanvas() {
                   </svg>
                   <p className="text-cyan-400 text-sm tracking-[0.2em] uppercase font-bold">PHASE 2</p>
                 </div>
-                <h3 className="text-white text-2xl font-bold mb-4">Scaling & U.S. Market Entry</h3>
-                <p className="text-white/80 text-base leading-relaxed">
-                  Bringing the solution to the <span className="text-cyan-300 font-semibold">USA</span>
-                </p>
+                <div className="flex flex-col gap-4">
+                  <h3 className="text-xl font-bold text-white">US Scaling & Platform Expansion</h3>
+
+                  <p className="text-white/70 text-sm md:text-base leading-relaxed">
+                    Continue US clinical validation and execute strategic market entry. Leverage established infrastructure to expand the SteadyArc platform beyond stroke into other neurological motor deficits:
+                  </p>
+
+                  {/* Visual List for Diseases */}
+                  <ul className="flex flex-col gap-2 mt-2">
+                    <li className="flex items-center gap-3 text-cyan-50 bg-white/5 border border-cyan-400/20 px-4 py-2 rounded-lg">
+                      <div className="w-2 h-2 rounded-full bg-cyan-400"></div>
+                      <span className="font-medium">Parkinson's Disease</span>
+                    </li>
+                    <li className="flex items-center gap-3 text-cyan-50 bg-white/5 border border-purple-400/20 px-4 py-2 rounded-lg">
+                      <div className="w-2 h-2 rounded-full bg-purple-400"></div>
+                      <span className="font-medium">Multiple Sclerosis</span>
+                    </li>
+                  </ul>
+                </div>
               </div>
             </div>
           </div>
@@ -1205,33 +1219,52 @@ export default function ScrollCanvas() {
           <p className="text-cyan-400/80 uppercase tracking-[0.2em] text-xs font-bold mb-12">
             SUPPORTED BY INNOVATION LEADERS & TOP CLINICAL EXPERTS
           </p>
-          <div className="flex flex-wrap justify-center items-start gap-8 md:gap-16 mt-12">
 
-            <div className="flex flex-col items-center gap-5 group breathe-slow">
-              <div className="w-64 h-32 bg-white/3 backdrop-blur-md border border-cyan-500/20 rounded-3xl flex items-center justify-center p-4 shadow-[0_0_20px_rgba(0,212,255,0.1)] group-hover:border-cyan-500/50 group-hover:shadow-[0_0_30px_rgba(0,212,255,0.2)] transition-all duration-500">
-                <img src="/rcc.png" alt="Harvard RCC" className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300" />
+          {/* 2x2 Grid Layout for Maximum Prominence */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12 max-w-4xl mx-auto">
+
+            {/* Partner 1: Harvard RCC */}
+            <div className="flex flex-col items-center justify-center p-8 border border-white/10 rounded-2xl bg-white/5 hover:bg-white/8 hover:border-cyan-500/40 transition-all duration-500 group">
+              <div className="h-24 w-full flex items-center justify-center mb-6">
+                <img src="/rcc.png" alt="Harvard RCC" className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300" />
               </div>
-              <p className="text-white/60 text-xs text-center font-medium tracking-wide max-w-50 leading-relaxed group-hover:text-cyan-300 transition-colors">
-                Real Colegio Complutense de Harvard University
-              </p>
+              <h4 className="text-white font-semibold text-base text-center mb-2">Real Colegio Complutense de Harvard</h4>
+              <span className="text-xs md:text-sm text-amber-400 font-semibold tracking-wider uppercase">
+                Entrepreneurship Support
+              </span>
             </div>
 
-            <div className="flex flex-col items-center gap-5 group breathe-delayed">
-              <div className="w-56 h-28 bg-white/3 backdrop-blur-md border border-cyan-500/20 rounded-3xl flex items-center justify-center p-6 shadow-[0_0_20px_rgba(0,212,255,0.1)] group-hover:border-cyan-500/50 group-hover:shadow-[0_0_30px_rgba(0,212,255,0.2)] transition-all duration-500">
-                <img src="/aws.png" alt="AWS" className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300" />
+            {/* Partner 2: AWS */}
+            <div className="flex flex-col items-center justify-center p-8 border border-white/10 rounded-2xl bg-white/5 hover:bg-white/8 hover:border-cyan-500/40 transition-all duration-500 group">
+              <div className="h-24 w-full flex items-center justify-center mb-6">
+                <img src="/aws.png" alt="AWS Spain" className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300" />
               </div>
-              <p className="text-white/60 text-xs text-center font-medium tracking-wide max-w-50 leading-relaxed group-hover:text-cyan-300 transition-colors">
-                AWS Spain
-              </p>
+              <h4 className="text-white font-semibold text-base text-center mb-2">AWS Spain</h4>
+              <span className="text-xs md:text-sm text-cyan-400 font-semibold tracking-wider uppercase">
+                Technical Support
+              </span>
             </div>
 
-            <div className="flex flex-col items-center gap-5 group drift-subtle">
-              <div className="w-56 h-28 bg-white/3 backdrop-blur-md border border-cyan-500/20 rounded-3xl flex items-center justify-center p-6 shadow-[0_0_20px_rgba(0,212,255,0.1)] group-hover:border-cyan-500/50 group-hover:shadow-[0_0_30px_rgba(0,212,255,0.2)] transition-all duration-500">
+            {/* Partner 3: Saturno Labs */}
+            <div className="flex flex-col items-center justify-center p-8 border border-white/10 rounded-2xl bg-white/5 hover:bg-white/8 hover:border-cyan-500/40 transition-all duration-500 group">
+              <div className="h-24 w-full flex items-center justify-center mb-6">
                 <img src="/saturno.png" alt="Saturno Labs" className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300" />
               </div>
-              <p className="text-white/60 text-xs text-center font-medium tracking-wide max-w-50 leading-relaxed group-hover:text-cyan-300 transition-colors">
-                Saturno Labs
-              </p>
+              <h4 className="text-white font-semibold text-base text-center mb-2">Saturno Labs</h4>
+              <span className="text-xs md:text-sm text-cyan-400 font-semibold tracking-wider uppercase">
+                Technical Support
+              </span>
+            </div>
+
+            {/* Partner 4: Sanitas (NEW) */}
+            <div className="flex flex-col items-center justify-center p-8 border border-white/10 rounded-2xl bg-white/5 hover:bg-white/8 hover:border-emerald-500/40 transition-all duration-500 group">
+              <div className="h-24 w-full flex items-center justify-center mb-6">
+                <img src="/Sanitas.png" alt="Sanitas" className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300" />
+              </div>
+              <h4 className="text-white font-semibold text-base text-center mb-2">Sanitas</h4>
+              <span className="text-xs md:text-sm text-emerald-400 font-semibold tracking-wider uppercase">
+                Clinical Support
+              </span>
             </div>
 
           </div>
@@ -1252,7 +1285,9 @@ export default function ScrollCanvas() {
             Not diagnosis. No wearables.
           </p>
           <a
-            href="#"
+            href="https://youtu.be/4O9YZqS7AJs"
+            target="_blank"
+            rel="noopener noreferrer"
             className="inline-block bg-white text-black px-10 py-5 rounded-full font-bold text-lg hover:scale-105 transition-transform duration-300 shadow-[0_0_40px_rgba(255,255,255,0.15)]"
           >
             Watch the Demo

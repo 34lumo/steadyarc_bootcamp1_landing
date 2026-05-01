@@ -51,8 +51,8 @@ function HandVis({ w, h }: { w: number; h: number }) {
       const t = frame * 0.012;
       ctx.clearRect(0, 0, w, h);
 
-      ctx.strokeStyle = "rgba(150,175,185,0.06)";
-      ctx.lineWidth = 1;
+      ctx.strokeStyle = "rgba(150,175,185,0.15)";
+      ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(wrist.x - 18, wrist.y);
       ctx.quadraticCurveTo(ox - 35, oy + 5, fingers[0].joints[0].x, fingers[0].joints[0].y);
@@ -63,15 +63,15 @@ function HandVis({ w, h }: { w: number; h: number }) {
       ctx.stroke();
 
       const palmGrad = ctx.createRadialGradient(ox, oy + 10, 0, ox, oy + 10, 50);
-      palmGrad.addColorStop(0, "rgba(130,165,175,0.04)");
+      palmGrad.addColorStop(0, "rgba(130,165,175,0.12)");
       palmGrad.addColorStop(1, "rgba(130,165,175,0)");
       ctx.fillStyle = palmGrad;
       ctx.beginPath();
       ctx.ellipse(ox, oy + 10, 38, 45, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      ctx.strokeStyle = "rgba(150,180,185,0.12)";
-      ctx.lineWidth = 1;
+      ctx.strokeStyle = "rgba(150,180,185,0.25)";
+      ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(wrist.x, wrist.y);
       ctx.lineTo(palmBase.x, palmBase.y);
@@ -86,38 +86,38 @@ function HandVis({ w, h }: { w: number; h: number }) {
         for (let s = 0; s < allPts.length - 1; s++) {
           const p0 = allPts[s];
           const p1 = allPts[s + 1];
-          ctx.strokeStyle = `rgba(${r},${g},${b},${0.03 + breathe * 0.01})`;
-          ctx.lineWidth = 4;
+          ctx.strokeStyle = `rgba(${r},${g},${b},${0.08 + breathe * 0.02})`;
+          ctx.lineWidth = 6;
           ctx.beginPath(); ctx.moveTo(p0.x, p0.y); ctx.lineTo(p1.x, p1.y); ctx.stroke();
-          ctx.strokeStyle = `rgba(${r},${g},${b},${0.25 + breathe * 0.05})`;
-          ctx.lineWidth = 0.8;
+          ctx.strokeStyle = `rgba(${r},${g},${b},${0.45 + breathe * 0.1})`;
+          ctx.lineWidth = 1.8;
           ctx.beginPath(); ctx.moveTo(p0.x, p0.y); ctx.lineTo(p1.x, p1.y); ctx.stroke();
         }
 
         f.joints.forEach((j, ji) => {
           const isTip = ji === 3;
-          const rad = isTip ? 3 : 2;
+          const rad = isTip ? 4 : 3;
           const jointPulse = 1 + Math.sin(phase + ji) * 0.06;
-          ctx.strokeStyle = `rgba(${r},${g},${b},${0.08 + breathe * 0.02})`;
-          ctx.lineWidth = 0.4;
+          ctx.strokeStyle = `rgba(${r},${g},${b},${0.18 + breathe * 0.04})`;
+          ctx.lineWidth = 1;
           ctx.beginPath(); ctx.arc(j.x, j.y, rad * 2.5 * jointPulse, 0, Math.PI * 2); ctx.stroke();
           const jg = ctx.createRadialGradient(j.x, j.y, 0, j.x, j.y, rad * 3);
-          jg.addColorStop(0, `rgba(${r},${g},${b},${0.08})`);
+          jg.addColorStop(0, `rgba(${r},${g},${b},${0.18})`);
           jg.addColorStop(1, `rgba(${r},${g},${b},0)`);
           ctx.fillStyle = jg;
           ctx.beginPath(); ctx.arc(j.x, j.y, rad * 3, 0, Math.PI * 2); ctx.fill();
-          ctx.beginPath(); ctx.arc(j.x, j.y, rad * 0.8, 0, Math.PI * 2);
-          ctx.fillStyle = isTip ? `rgba(220,230,235,0.85)` : `rgba(${r},${g},${b},0.7)`;
+          ctx.beginPath(); ctx.arc(j.x, j.y, rad * 0.9, 0, Math.PI * 2);
+          ctx.fillStyle = isTip ? `rgba(220,230,235,0.95)` : `rgba(${r},${g},${b},0.85)`;
           ctx.fill();
         });
 
         const tip = f.joints[3];
-        ctx.font = "700 6.5px 'JetBrains Mono'";
-        ctx.fillStyle = `rgba(${r},${g},${b},0.55)`;
+        ctx.font = "700 7px 'JetBrains Mono'";
+        ctx.fillStyle = `rgba(${r},${g},${b},0.85)`;
         ctx.textAlign = "center";
         ctx.fillText(`${f.rom}°`, tip.x, tip.y - 9);
-        ctx.font = "400 4.5px 'JetBrains Mono'";
-        ctx.fillStyle = `rgba(${r},${g},${b},0.3)`;
+        ctx.font = "500 5px 'JetBrains Mono'";
+        ctx.fillStyle = `rgba(${r},${g},${b},0.55)`;
         ctx.fillText(f.label, tip.x, tip.y - 16);
       });
 
@@ -149,8 +149,8 @@ function HandVis({ w, h }: { w: number; h: number }) {
         ctx.beginPath(); ctx.arc(mcp.x, mcp.y, 6, angle2, angle1); ctx.stroke();
       });
 
-      ctx.font = "500 5px 'JetBrains Mono'";
-      ctx.fillStyle = "rgba(150,170,180,0.18)";
+      ctx.font = "600 6px 'JetBrains Mono'";
+      ctx.fillStyle = "rgba(150,170,180,0.45)";
       ctx.textAlign = "left";
       ctx.fillText("21 LANDMARKS", 4, h - 4);
       ctx.textAlign = "right";
@@ -198,8 +198,8 @@ function EyeVis({ w, h }: { w: number; h: number }) {
       const eyeX = cx + Math.sin(t * 0.4) * 2;
       const eyeY = cy + Math.cos(t * 0.3) * 1.5;
 
-      ctx.strokeStyle = "rgba(150,175,185,0.06)";
-      ctx.lineWidth = 0.8;
+      ctx.strokeStyle = "rgba(150,175,185,0.15)";
+      ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.moveTo(eyeX - irisR * 1.6, eyeY);
       ctx.quadraticCurveTo(eyeX, eyeY - irisR * 1.1, eyeX + irisR * 1.6, eyeY);
@@ -207,16 +207,16 @@ function EyeVis({ w, h }: { w: number; h: number }) {
       ctx.stroke();
 
       const irisGlow = ctx.createRadialGradient(eyeX, eyeY, irisR * 0.5, eyeX, eyeY, irisR * 1.2);
-      irisGlow.addColorStop(0, "rgba(80,130,120,0.08)");
+      irisGlow.addColorStop(0, "rgba(80,130,120,0.18)");
       irisGlow.addColorStop(1, "rgba(80,130,120,0)");
       ctx.fillStyle = irisGlow;
       ctx.beginPath(); ctx.arc(eyeX, eyeY, irisR * 1.2, 0, Math.PI * 2); ctx.fill();
 
-      ctx.strokeStyle = "rgba(100,160,145,0.15)";
-      ctx.lineWidth = 1.2;
+      ctx.strokeStyle = "rgba(100,160,145,0.35)";
+      ctx.lineWidth = 2;
       ctx.beginPath(); ctx.arc(eyeX, eyeY, irisR, 0, Math.PI * 2); ctx.stroke();
-      ctx.strokeStyle = "rgba(100,160,145,0.08)";
-      ctx.lineWidth = 0.6;
+      ctx.strokeStyle = "rgba(100,160,145,0.18)";
+      ctx.lineWidth = 1.2;
       ctx.beginPath(); ctx.arc(eyeX, eyeY, irisR * 0.75, 0, Math.PI * 2); ctx.stroke();
 
       for (let i = 0; i < 36; i++) {
@@ -224,8 +224,8 @@ function EyeVis({ w, h }: { w: number; h: number }) {
         const innerR = pupilR + 2;
         const outerR = irisR - 1;
         const wobble = Math.sin(a * 3 + t) * 0.5;
-        ctx.strokeStyle = `rgba(100,155,140,${0.04 + Math.sin(a * 5 + t * 0.5) * 0.02})`;
-        ctx.lineWidth = 0.3;
+        ctx.strokeStyle = `rgba(100,155,140,${0.12 + Math.sin(a * 5 + t * 0.5) * 0.05})`;
+        ctx.lineWidth = 0.7;
         ctx.beginPath();
         ctx.moveTo(eyeX + Math.cos(a) * innerR, eyeY + Math.sin(a) * innerR);
         ctx.lineTo(eyeX + Math.cos(a + wobble * 0.02) * outerR, eyeY + Math.sin(a + wobble * 0.02) * outerR);
@@ -238,28 +238,28 @@ function EyeVis({ w, h }: { w: number; h: number }) {
       pupilGrad.addColorStop(1, "rgba(30,45,50,0.6)");
       ctx.fillStyle = pupilGrad;
       ctx.beginPath(); ctx.arc(eyeX, eyeY, pupilR, 0, Math.PI * 2); ctx.fill();
-      ctx.strokeStyle = "rgba(100,160,145,0.2)";
-      ctx.lineWidth = 0.5;
+      ctx.strokeStyle = "rgba(100,160,145,0.4)";
+      ctx.lineWidth = 1;
       ctx.beginPath(); ctx.arc(eyeX, eyeY, pupilR, 0, Math.PI * 2); ctx.stroke();
       ctx.beginPath(); ctx.arc(eyeX - pupilR * 0.3, eyeY - pupilR * 0.3, pupilR * 0.15, 0, Math.PI * 2);
-      ctx.fillStyle = "rgba(200,220,225,0.25)";
+      ctx.fillStyle = "rgba(200,220,225,0.45)";
       ctx.fill();
 
-      ctx.strokeStyle = "rgba(150,175,185,0.1)";
-      ctx.lineWidth = 0.4;
+      ctx.strokeStyle = "rgba(150,175,185,0.25)";
+      ctx.lineWidth = 1;
       ctx.setLineDash([2, 2]);
       ctx.beginPath(); ctx.moveTo(eyeX - pupilR, eyeY); ctx.lineTo(eyeX - irisR * 1.4, eyeY); ctx.stroke();
       ctx.beginPath(); ctx.moveTo(eyeX + pupilR, eyeY); ctx.lineTo(eyeX + irisR * 1.4, eyeY); ctx.stroke();
       ctx.setLineDash([]);
 
       const diamMm = (3.2 + Math.sin(t * 0.6) * 0.6).toFixed(1);
-      ctx.font = "600 5.5px 'JetBrains Mono'";
-      ctx.fillStyle = "rgba(150,180,175,0.4)";
+      ctx.font = "700 6px 'JetBrains Mono'";
+      ctx.fillStyle = "rgba(150,180,175,0.7)";
       ctx.textAlign = "center";
       ctx.fillText(`⌀ ${diamMm}mm`, eyeX, eyeY + irisR + 14);
 
-      ctx.strokeStyle = "rgba(130,165,155,0.06)";
-      ctx.lineWidth = 0.5;
+      ctx.strokeStyle = "rgba(130,165,155,0.15)";
+      ctx.lineWidth = 1;
       ctx.beginPath();
       const trailProgress = (t * 0.15) % 1;
       const numPts = Math.floor(trailProgress * saccades.length) + 2;
@@ -275,13 +275,13 @@ function EyeVis({ w, h }: { w: number; h: number }) {
         const s = saccades[i];
         const sx = eyeX + (s.x - 0.5) * irisR * 1.2;
         const sy = eyeY + (s.y - 0.5) * irisR * 1.2;
-        ctx.beginPath(); ctx.arc(sx, sy, 1, 0, Math.PI * 2);
-        ctx.fillStyle = "rgba(130,170,160,0.15)";
+        ctx.beginPath(); ctx.arc(sx, sy, 1.5, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(130,170,160,0.35)";
         ctx.fill();
       }
 
-      ctx.font = "500 5px 'JetBrains Mono'";
-      ctx.fillStyle = "rgba(150,170,180,0.18)";
+      ctx.font = "600 6.5px 'JetBrains Mono'";
+      ctx.fillStyle = "rgba(150,170,180,0.5)";
       ctx.textAlign = "left";
       ctx.fillText("SACCADE 8pts", 4, h - 4);
       ctx.textAlign = "right";
@@ -353,13 +353,13 @@ function VoiceVis({ w, h }: { w: number; h: number }) {
           if (freqRatio < 0.3) { r = 170; g = 140 + pulse * 40; b = 100; }
           else if (freqRatio < 0.6) { r = 130; g = 165 + pulse * 20; b = 155; }
           else { r = 120; g = 150; b = 170 + pulse * 20; }
-          ctx.fillStyle = `rgba(${r},${g},${b},${pulse * 0.35})`;
+          ctx.fillStyle = `rgba(${r},${g},${b},${pulse * 0.65})`;
           ctx.fillRect(col * colW + 0.5, spectroY + (bands - 1 - band) * bandH + 0.5, colW - 1, bandH - 0.5);
         }
       }
 
-      ctx.font = "400 4px 'JetBrains Mono'";
-      ctx.fillStyle = "rgba(150,170,180,0.2)";
+      ctx.font = "500 4.5px 'JetBrains Mono'";
+      ctx.fillStyle = "rgba(150,170,180,0.4)";
       ctx.textAlign = "right";
       ctx.fillText("4kHz", w - 3, spectroY + 6);
       ctx.fillText("2kHz", w - 3, spectroY + spectroH * 0.4);
@@ -367,12 +367,12 @@ function VoiceVis({ w, h }: { w: number; h: number }) {
       ctx.fillText("Hz", w - 3, spectroY + spectroH - 2);
 
       const waveMid = waveY + waveH / 2;
-      ctx.strokeStyle = "rgba(150,175,185,0.04)";
-      ctx.lineWidth = 0.3;
+      ctx.strokeStyle = "rgba(150,175,185,0.1)";
+      ctx.lineWidth = 0.8;
       ctx.beginPath(); ctx.moveTo(0, waveMid); ctx.lineTo(w, waveMid); ctx.stroke();
 
-      ctx.strokeStyle = "rgba(140,175,170,0.3)";
-      ctx.lineWidth = 0.8;
+      ctx.strokeStyle = "rgba(140,175,170,0.6)";
+      ctx.lineWidth = 1.5;
       ctx.beginPath();
       for (let x = 0; x < w; x++) {
         const xn = x / w;
@@ -383,7 +383,7 @@ function VoiceVis({ w, h }: { w: number; h: number }) {
       }
       ctx.stroke();
 
-      ctx.fillStyle = "rgba(140,175,170,0.03)";
+      ctx.fillStyle = "rgba(140,175,170,0.08)";
       ctx.beginPath();
       for (let x = 0; x < w; x++) {
         const xn = x / w;
@@ -401,8 +401,8 @@ function VoiceVis({ w, h }: { w: number; h: number }) {
       }
       ctx.fill();
 
-      ctx.font = "500 5px 'JetBrains Mono'";
-      ctx.fillStyle = "rgba(150,170,180,0.18)";
+      ctx.font = "600 6.5px 'JetBrains Mono'";
+      ctx.fillStyle = "rgba(150,170,180,0.5)";
       ctx.textAlign = "left";
       ctx.fillText("F0 182Hz · JITTER 0.8%", 4, h - 4);
       ctx.textAlign = "right";
@@ -484,12 +484,12 @@ function KPI({ label, value, unit }: { label: string; value: number; unit: strin
   const display = unit === "%" || unit === "mm" ? v.toFixed(1) : Math.round(v);
   return (
     <div className="flex flex-col gap-0.5">
-      <span className="text-[6px] tracking-[0.14em] uppercase font-semibold text-cyan-400/40"
+      <span className="text-[7px] tracking-[0.14em] uppercase font-semibold text-cyan-400/60"
         style={{ fontFamily: "'JetBrains Mono'" }}>{label}</span>
       <div className="flex items-baseline gap-0.5">
-        <span className="text-[16px] font-extrabold tabular-nums leading-none text-cyan-50/80"
+        <span className="text-[19px] font-extrabold tabular-nums leading-none text-cyan-50/90"
           style={{ fontFamily: "'JetBrains Mono'" }}>{display}</span>
-        <span className="text-[7px] font-medium text-cyan-400/30">{unit}</span>
+        <span className="text-[8px] font-medium text-cyan-400/45">{unit}</span>
       </div>
     </div>
   );
@@ -498,12 +498,12 @@ function KPI({ label, value, unit }: { label: string; value: number; unit: strin
 function NeuralDashboard() {
   return (
     <div className="w-full overflow-hidden relative" style={{
-      background: "rgba(0, 0, 0, 0.35)",
-      backdropFilter: "blur(16px)",
-      WebkitBackdropFilter: "blur(16px)",
+      background: "rgba(0, 0, 0, 0.75)",
+      backdropFilter: "blur(20px)",
+      WebkitBackdropFilter: "blur(20px)",
       borderRadius: 16,
-      border: "1px solid rgba(34, 211, 238, 0.15)",
-      boxShadow: "0 0 30px rgba(0, 212, 255, 0.08), inset 0 1px 0 rgba(255,255,255,0.03)",
+      border: "1px solid rgba(34, 211, 238, 0.35)",
+      boxShadow: "0 0 40px rgba(0, 212, 255, 0.2), inset 0 1px 0 rgba(255,255,255,0.08)",
     }}>
       <div className="relative z-10 p-2.5 space-y-1.5">
         {/* Header */}
@@ -515,13 +515,13 @@ function NeuralDashboard() {
               <span className="relative inline-flex rounded-full h-1.5 w-1.5"
                 style={{ background: "rgb(34, 211, 238)" }} />
             </span>
-            <span className="text-[8px] font-bold tracking-[0.15em] uppercase text-cyan-400/80"
+            <span className="text-[10px] font-bold tracking-[0.15em] uppercase text-cyan-400/90"
               style={{ fontFamily: "'JetBrains Mono'" }}>
               Clinician Dashboard
             </span>
-            <span className="text-[7px] font-mono text-cyan-300/40">Carmen D.R.</span>
+            <span className="text-[9px] font-mono text-cyan-300/60">Carmen D.R.</span>
           </div>
-          <span className="text-[7px] font-mono tracking-wider text-cyan-400/50">LIVE</span>
+          <span className="text-[9px] font-mono tracking-wider text-cyan-400/70">LIVE</span>
         </div>
 
         <div className="grid grid-cols-4 gap-1.5">
@@ -537,9 +537,9 @@ function NeuralDashboard() {
           border: "1px solid rgba(34, 211, 238, 0.08)",
         }}>
           <div className="px-2 py-1 flex items-center justify-between">
-            <span className="text-[6px] font-semibold tracking-[0.12em] uppercase text-cyan-400/50"
+            <span className="text-[7px] font-semibold tracking-[0.12em] uppercase text-cyan-400/70"
               style={{ fontFamily: "'JetBrains Mono'" }}>Hand tracking</span>
-            <span className="text-[5px] font-mono text-white/20">21 landmarks</span>
+            <span className="text-[6px] font-mono text-white/35">21 landmarks</span>
           </div>
           <div className="flex justify-center"><HandVis w={250} h={100} /></div>
         </div>
@@ -550,9 +550,9 @@ function NeuralDashboard() {
           border: "1px solid rgba(34, 211, 238, 0.08)",
         }}>
           <div className="px-2 py-1 flex items-center justify-between">
-            <span className="text-[6px] font-semibold tracking-[0.12em] uppercase text-cyan-400/50"
+            <span className="text-[7px] font-semibold tracking-[0.12em] uppercase text-cyan-400/70"
               style={{ fontFamily: "'JetBrains Mono'" }}>Pupillometry</span>
-            <span className="text-[5px] font-mono text-white/20">saccade tracking</span>
+            <span className="text-[6px] font-mono text-white/35">saccade tracking</span>
           </div>
           <div className="flex justify-center"><EyeVis w={250} h={85} /></div>
         </div>
@@ -563,16 +563,16 @@ function NeuralDashboard() {
           border: "1px solid rgba(34, 211, 238, 0.08)",
         }}>
           <div className="px-2 py-1 flex items-center justify-between">
-            <span className="text-[6px] font-semibold tracking-[0.12em] uppercase text-cyan-400/50"
+            <span className="text-[7px] font-semibold tracking-[0.12em] uppercase text-cyan-400/70"
               style={{ fontFamily: "'JetBrains Mono'" }}>Voice analysis</span>
-            <span className="text-[5px] font-mono text-white/20">spectrogram</span>
+            <span className="text-[6px] font-mono text-white/35">spectrogram</span>
           </div>
           <div className="flex justify-center"><VoiceVis w={250} h={75} /></div>
         </div>
 
         <div className="flex justify-between pt-0.5">
-          <span className="text-[6px] font-mono text-cyan-400/20">SteadyArc Clinical v2.4</span>
-          <span className="text-[6px] font-mono text-white/15">Webcam · Mic</span>
+          <span className="text-[7px] font-mono text-cyan-400/35">SteadyArc Clinical v2.4</span>
+          <span className="text-[7px] font-mono text-white/25">Webcam · Mic</span>
         </div>
       </div>
     </div>
