@@ -798,7 +798,7 @@ export default function ScrollCanvas() {
             zIndex: 20,
           }}
         >
-          <div className="absolute top-[40%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[480px]">
+          <div className="absolute top-[30%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[380px]">
             <NeuralDashboard />
           </div>
         </div>
