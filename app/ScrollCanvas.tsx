@@ -500,7 +500,7 @@ export default function ScrollCanvas() {
             />
             <div
               className="absolute left-1/2 -translate-x-1/2 text-center w-[85%] max-w-[920px]"
-              style={{ top: "65%" }}
+              style={{ top: "50%", transform: "translate(-50%, -50%)" }}
             >
               <h2 className="font-extrabold tracking-tighter text-5xl md:text-6xl text-transparent bg-clip-text bg-gradient-to-b from-white to-white/70 drop-shadow-[0_0_20px_rgba(0,212,255,0.3)] leading-tight m-0">
                 {section.title}
@@ -514,11 +514,11 @@ export default function ScrollCanvas() {
               {section.sub && (
                 <>
                   <div className="w-12 h-1 bg-cyan-400 rounded-full my-6 mx-auto shadow-[0_0_10px_rgba(34,211,238,0.6)]"></div>
-                  <p className="font-medium tracking-wide text-xl md:text-2xl text-cyan-50/80 leading-loose m-0">
+                  <p className="font-medium tracking-wide text-xl md:text-2xl text-cyan-50/80 leading-loose m-0 px-4">
                     {section.sub}
                   </p>
                   {"sub2" in section && section.sub2 && (
-                    <p className="font-medium tracking-wide text-lg md:text-xl text-cyan-200/60 leading-loose m-0 mt-4">
+                    <p className="font-medium tracking-wide text-lg md:text-xl text-cyan-200/60 leading-loose m-0 mt-4 px-4">
                       {section.sub2}
                     </p>
                   )}
