@@ -514,11 +514,11 @@ export default function ScrollCanvas() {
               {section.sub && (
                 <>
                   <div className="w-12 h-1 bg-cyan-400 rounded-full my-6 mx-auto shadow-[0_0_10px_rgba(34,211,238,0.6)]"></div>
-                  <p className="font-medium tracking-wide text-xl md:text-2xl text-cyan-50/80 leading-relaxed m-0">
+                  <p className="font-medium tracking-wide text-xl md:text-2xl text-cyan-50/80 leading-loose m-0">
                     {section.sub}
                   </p>
                   {"sub2" in section && section.sub2 && (
-                    <p className="font-medium tracking-wide text-lg md:text-xl text-cyan-200/60 leading-relaxed m-0 mt-3">
+                    <p className="font-medium tracking-wide text-lg md:text-xl text-cyan-200/60 leading-loose m-0 mt-4">
                       {section.sub2}
                     </p>
                   )}
@@ -1259,7 +1259,7 @@ export default function ScrollCanvas() {
             {/* Partner 4: Sanitas (NEW) */}
             <div className="flex flex-col items-center justify-center p-8 border border-white/10 rounded-2xl bg-white/5 hover:bg-white/8 hover:border-emerald-500/40 transition-all duration-500 group">
               <div className="h-24 w-full flex items-center justify-center mb-6">
-                <img src="/Sanitas.png" alt="Sanitas" className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300" />
+                <img src="/sanitas.png" alt="Sanitas" className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300" />
               </div>
               <h4 className="text-white font-semibold text-base text-center mb-2">Sanitas</h4>
               <span className="text-xs md:text-sm text-emerald-400 font-semibold tracking-wider uppercase">
