@@ -48,14 +48,12 @@ const sections = [
     endFrame: 720,
     title: "For patients, a game. For clinicians, objective data over time.",
     sub: "It's not one session that matters — it's the sequence.",
-    sub2: "Act earlier. Allocate specialist resources where and when needed.",
   },
   {
     startFrame: 720,
     endFrame: 764,
     title: "From Gameplay to Clinical Clarity",
     sub: "SteadyArc transforms at-home patient interactions into objective, real-time data.",
-    sub2: "We provide continuous visibility into motor recovery, enabling proactive decisions without the friction of extra hardware.",
   },
 ];
 
